@@ -75,7 +75,7 @@ export default function TradingApp() {
     },
     {
       id: 'terms',
-      title: 'Үндсэн нэр томъёо',
+      title: 'Үндсэн нэр томьёо',
       icon: '📚',
       level: 'Анхан шат',
       steps: [
@@ -347,7 +347,7 @@ export default function TradingApp() {
   // ============ SVG ЗУРГУУД ============
   const svgImages = {
     'candle-anatomy': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Лааны бүтэц</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Лааны бүтэц</text>
       <!-- Bullish (green) candle -->
       <g>
         <text x="90" y="55" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🟢 Bullish (Өсөлт)</text>
@@ -358,14 +358,14 @@ export default function TradingApp() {
         <!-- Wick bottom -->
         <line x1="90" y1="200" x2="90" y2="240" stroke="#10b981" stroke-width="2"/>
         <!-- Labels -->
-        <text x="160" y="78" fill="#94a3b8" font-size="11">High</text>
-        <line x1="115" y1="65" x2="155" y2="75" stroke="#64748b" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="160" y="108" fill="#94a3b8" font-size="11">Close</text>
-        <line x1="115" y1="100" x2="155" y2="105" stroke="#64748b" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="160" y="208" fill="#94a3b8" font-size="11">Open</text>
-        <line x1="115" y1="200" x2="155" y2="205" stroke="#64748b" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="160" y="245" fill="#94a3b8" font-size="11">Low</text>
-        <line x1="115" y1="240" x2="155" y2="242" stroke="#64748b" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="160" y="78" fill="#5A7090" font-size="11">High</text>
+        <line x1="115" y1="65" x2="155" y2="75" stroke="#7E94AE" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="160" y="108" fill="#5A7090" font-size="11">Close</text>
+        <line x1="115" y1="100" x2="155" y2="105" stroke="#7E94AE" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="160" y="208" fill="#5A7090" font-size="11">Open</text>
+        <line x1="115" y1="200" x2="155" y2="205" stroke="#7E94AE" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="160" y="245" fill="#5A7090" font-size="11">Low</text>
+        <line x1="115" y1="240" x2="155" y2="242" stroke="#7E94AE" stroke-width="0.5" stroke-dasharray="2,2"/>
       </g>
       <!-- Bearish (red) candle -->
       <g>
@@ -373,26 +373,26 @@ export default function TradingApp() {
         <line x1="290" y1="65" x2="290" y2="90" stroke="#ef4444" stroke-width="2"/>
         <rect x="270" y="90" width="40" height="110" fill="#ef4444" stroke="#ef4444" stroke-width="2"/>
         <line x1="290" y1="200" x2="290" y2="240" stroke="#ef4444" stroke-width="2"/>
-        <text x="320" y="78" fill="#94a3b8" font-size="11">High</text>
-        <text x="320" y="98" fill="#94a3b8" font-size="11">Open</text>
-        <text x="320" y="208" fill="#94a3b8" font-size="11">Close</text>
-        <text x="320" y="245" fill="#94a3b8" font-size="11">Low</text>
+        <text x="320" y="78" fill="#5A7090" font-size="11">High</text>
+        <text x="320" y="98" fill="#5A7090" font-size="11">Open</text>
+        <text x="320" y="208" fill="#5A7090" font-size="11">Close</text>
+        <text x="320" y="245" fill="#5A7090" font-size="11">Low</text>
       </g>
     </svg>`,
     
     'pin-bar': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Pin Bar (Hammer / Shooting Star)</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Pin Bar (Hammer / Shooting Star)</text>
       <!-- Hammer (Bullish) -->
       <g>
         <text x="90" y="55" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🔨 Hammer</text>
-        <text x="90" y="70" text-anchor="middle" fill="#94a3b8" font-size="10">Уналтын ёроолд</text>
+        <text x="90" y="70" text-anchor="middle" fill="#5A7090" font-size="10">Уналтын ёроолд</text>
         <!-- Small body at top -->
         <line x1="90" y1="85" x2="90" y2="100" stroke="#10b981" stroke-width="2"/>
         <rect x="78" y="100" width="24" height="20" fill="#10b981"/>
         <!-- Long lower wick -->
         <line x1="90" y1="120" x2="90" y2="220" stroke="#10b981" stroke-width="2"/>
-        <text x="135" y="170" fill="#94a3b8" font-size="11">Урт доод</text>
-        <text x="135" y="185" fill="#94a3b8" font-size="11">сүүл</text>
+        <text x="135" y="170" fill="#5A7090" font-size="11">Урт доод</text>
+        <text x="135" y="185" fill="#5A7090" font-size="11">сүүл</text>
         <!-- Trend arrow up -->
         <path d="M 50 240 L 90 230 L 130 240" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#ag)"/>
         <text x="90" y="260" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">↑ Өсөлт</text>
@@ -400,11 +400,11 @@ export default function TradingApp() {
       <!-- Shooting Star (Bearish) -->
       <g>
         <text x="290" y="55" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="600">⭐ Shooting Star</text>
-        <text x="290" y="70" text-anchor="middle" fill="#94a3b8" font-size="10">Өсөлтийн оройд</text>
+        <text x="290" y="70" text-anchor="middle" fill="#5A7090" font-size="10">Өсөлтийн оройд</text>
         <!-- Long upper wick -->
         <line x1="290" y1="85" x2="290" y2="180" stroke="#ef4444" stroke-width="2"/>
-        <text x="240" y="130" text-anchor="end" fill="#94a3b8" font-size="11">Урт дээд</text>
-        <text x="240" y="145" text-anchor="end" fill="#94a3b8" font-size="11">сүүл</text>
+        <text x="240" y="130" text-anchor="end" fill="#5A7090" font-size="11">Урт дээд</text>
+        <text x="240" y="145" text-anchor="end" fill="#5A7090" font-size="11">сүүл</text>
         <!-- Small body at bottom -->
         <rect x="278" y="180" width="24" height="20" fill="#ef4444"/>
         <line x1="290" y1="200" x2="290" y2="215" stroke="#ef4444" stroke-width="2"/>
@@ -420,7 +420,7 @@ export default function TradingApp() {
     </svg>`,
     
     'engulfing': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Engulfing Bar Pattern</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Engulfing Bar Pattern</text>
       <!-- Bullish Engulfing -->
       <g>
         <text x="90" y="55" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🟢 Bullish Engulfing</text>
@@ -432,8 +432,8 @@ export default function TradingApp() {
         <line x1="105" y1="80" x2="105" y2="95" stroke="#10b981" stroke-width="2"/>
         <rect x="85" y="95" width="40" height="80" fill="#10b981"/>
         <line x1="105" y1="175" x2="105" y2="190" stroke="#10b981" stroke-width="2"/>
-        <text x="90" y="220" text-anchor="middle" fill="#94a3b8" font-size="10">Бяцхан → Том ногоон</text>
-        <text x="90" y="235" text-anchor="middle" fill="#94a3b8" font-size="10">"залгидаг"</text>
+        <text x="90" y="220" text-anchor="middle" fill="#5A7090" font-size="10">Бяцхан → Том ногоон</text>
+        <text x="90" y="235" text-anchor="middle" fill="#5A7090" font-size="10">"залгидаг"</text>
         <text x="90" y="260" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">↑ Reversal Up</text>
       </g>
       <!-- Bearish Engulfing -->
@@ -447,21 +447,21 @@ export default function TradingApp() {
         <line x1="305" y1="80" x2="305" y2="100" stroke="#ef4444" stroke-width="2"/>
         <rect x="285" y="100" width="40" height="85" fill="#ef4444"/>
         <line x1="305" y1="185" x2="305" y2="200" stroke="#ef4444" stroke-width="2"/>
-        <text x="290" y="220" text-anchor="middle" fill="#94a3b8" font-size="10">Бяцхан → Том улаан</text>
-        <text x="290" y="235" text-anchor="middle" fill="#94a3b8" font-size="10">"залгидаг"</text>
+        <text x="290" y="220" text-anchor="middle" fill="#5A7090" font-size="10">Бяцхан → Том улаан</text>
+        <text x="290" y="235" text-anchor="middle" fill="#5A7090" font-size="10">"залгидаг"</text>
         <text x="290" y="260" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="600">↓ Reversal Down</text>
       </g>
     </svg>`,
     
     'doji': `<svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Doji Хувилбарууд</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Doji Хувилбарууд</text>
       <!-- Standard Doji -->
       <g>
-        <text x="65" y="55" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Standard</text>
-        <line x1="65" y1="70" x2="65" y2="180" stroke="#fbbf24" stroke-width="1.5"/>
-        <line x1="50" y1="125" x2="80" y2="125" stroke="#fbbf24" stroke-width="3"/>
-        <text x="65" y="210" text-anchor="middle" fill="#94a3b8" font-size="10">Шийдвэргүй</text>
-        <text x="65" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">байдал</text>
+        <text x="65" y="55" text-anchor="middle" fill="#5A7090" font-size="11" font-weight="600">Standard</text>
+        <line x1="65" y1="70" x2="65" y2="180" stroke="#5A7090" stroke-width="1.5"/>
+        <line x1="50" y1="125" x2="80" y2="125" stroke="#5A7090" stroke-width="3"/>
+        <text x="65" y="210" text-anchor="middle" fill="#5A7090" font-size="10">Шийдвэргүй</text>
+        <text x="65" y="225" text-anchor="middle" fill="#5A7090" font-size="10">байдал</text>
       </g>
       <!-- Dragonfly -->
       <g>
@@ -470,7 +470,7 @@ export default function TradingApp() {
         <line x1="140" y1="80" x2="170" y2="80" stroke="#10b981" stroke-width="3"/>
         <line x1="155" y1="80" x2="155" y2="180" stroke="#10b981" stroke-width="1.5"/>
         <text x="155" y="210" text-anchor="middle" fill="#10b981" font-size="10">↑ Bullish</text>
-        <text x="155" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">reversal</text>
+        <text x="155" y="225" text-anchor="middle" fill="#5A7090" font-size="10">reversal</text>
       </g>
       <!-- Gravestone -->
       <g>
@@ -478,87 +478,87 @@ export default function TradingApp() {
         <line x1="245" y1="80" x2="245" y2="180" stroke="#ef4444" stroke-width="1.5"/>
         <line x1="230" y1="180" x2="260" y2="180" stroke="#ef4444" stroke-width="3"/>
         <text x="245" y="210" text-anchor="middle" fill="#ef4444" font-size="10">↓ Bearish</text>
-        <text x="245" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">reversal</text>
+        <text x="245" y="225" text-anchor="middle" fill="#5A7090" font-size="10">reversal</text>
       </g>
       <!-- Long-legged -->
       <g>
         <text x="335" y="55" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="600">Long-legged</text>
         <line x1="335" y1="70" x2="335" y2="190" stroke="#a78bfa" stroke-width="1.5"/>
         <line x1="320" y1="130" x2="350" y2="130" stroke="#a78bfa" stroke-width="3"/>
-        <text x="335" y="210" text-anchor="middle" fill="#94a3b8" font-size="10">Хүчтэй</text>
-        <text x="335" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">тэмцэл</text>
+        <text x="335" y="210" text-anchor="middle" fill="#5A7090" font-size="10">Хүчтэй</text>
+        <text x="335" y="225" text-anchor="middle" fill="#5A7090" font-size="10">тэмцэл</text>
       </g>
     </svg>`,
     
     'inside-bar': `<svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Inside Bar (Harami)</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Inside Bar (Harami)</text>
       <!-- Mother Candle -->
       <g>
-        <text x="120" y="55" text-anchor="middle" fill="#94a3b8" font-size="12" font-weight="600">Эх лаа (Mother)</text>
+        <text x="120" y="55" text-anchor="middle" fill="#5A7090" font-size="12" font-weight="600">Эх лаа (Mother)</text>
         <line x1="120" y1="70" x2="120" y2="85" stroke="#10b981" stroke-width="2"/>
         <rect x="100" y="85" width="40" height="120" fill="#10b981"/>
         <line x1="120" y1="205" x2="120" y2="220" stroke="#10b981" stroke-width="2"/>
-        <text x="120" y="245" text-anchor="middle" fill="#94a3b8" font-size="10">Том лаа</text>
+        <text x="120" y="245" text-anchor="middle" fill="#5A7090" font-size="10">Том лаа</text>
       </g>
       <!-- Inside Bar (baby) -->
       <g>
-        <text x="240" y="55" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">Хүүхэд лаа (Baby)</text>
+        <text x="240" y="55" text-anchor="middle" fill="#5A7090" font-size="12" font-weight="600">Хүүхэд лаа (Baby)</text>
         <!-- Mother shadow -->
         <line x1="240" y1="70" x2="240" y2="85" stroke="#10b981" stroke-width="2" opacity="0.3"/>
         <rect x="220" y="85" width="40" height="120" fill="#10b981" opacity="0.2"/>
         <line x1="240" y1="205" x2="240" y2="220" stroke="#10b981" stroke-width="2" opacity="0.3"/>
         <!-- Baby candle inside -->
-        <line x1="270" y1="115" x2="270" y2="125" stroke="#fbbf24" stroke-width="2"/>
-        <rect x="260" y="125" width="20" height="40" fill="#fbbf24"/>
-        <line x1="270" y1="165" x2="270" y2="175" stroke="#fbbf24" stroke-width="2"/>
-        <text x="240" y="245" text-anchor="middle" fill="#94a3b8" font-size="10">Бяцхан, дотор</text>
+        <line x1="270" y1="115" x2="270" y2="125" stroke="#5A7090" stroke-width="2"/>
+        <rect x="260" y="125" width="20" height="40" fill="#5A7090"/>
+        <line x1="270" y1="165" x2="270" y2="175" stroke="#5A7090" stroke-width="2"/>
+        <text x="240" y="245" text-anchor="middle" fill="#5A7090" font-size="10">Бяцхан, дотор</text>
       </g>
       <!-- Description box -->
       <rect x="40" y="0" width="300" height="0" fill="none"/>
     </svg>`,
     
     'morning-evening-star': `<svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Morning / Evening Star</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Morning / Evening Star</text>
       <!-- Morning Star -->
       <g>
         <text x="90" y="55" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🌅 Morning Star</text>
-        <text x="90" y="70" text-anchor="middle" fill="#94a3b8" font-size="10">Уналтын ёроолд</text>
+        <text x="90" y="70" text-anchor="middle" fill="#5A7090" font-size="10">Уналтын ёроолд</text>
         <!-- Big red -->
         <line x1="50" y1="85" x2="50" y2="95" stroke="#ef4444" stroke-width="2"/>
         <rect x="42" y="95" width="16" height="80" fill="#ef4444"/>
         <line x1="50" y1="175" x2="50" y2="185" stroke="#ef4444" stroke-width="2"/>
         <!-- Small middle (doji-ish) -->
-        <line x1="90" y1="155" x2="90" y2="195" stroke="#94a3b8" stroke-width="1.5"/>
-        <rect x="84" y="170" width="12" height="12" fill="#94a3b8"/>
+        <line x1="90" y1="155" x2="90" y2="195" stroke="#5A7090" stroke-width="1.5"/>
+        <rect x="84" y="170" width="12" height="12" fill="#5A7090"/>
         <!-- Big green -->
         <line x1="130" y1="100" x2="130" y2="110" stroke="#10b981" stroke-width="2"/>
         <rect x="122" y="110" width="16" height="75" fill="#10b981"/>
         <line x1="130" y1="185" x2="130" y2="200" stroke="#10b981" stroke-width="2"/>
         <text x="90" y="230" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">↑ Bullish</text>
-        <text x="90" y="245" text-anchor="middle" fill="#94a3b8" font-size="10">reversal</text>
+        <text x="90" y="245" text-anchor="middle" fill="#5A7090" font-size="10">reversal</text>
       </g>
       <!-- Evening Star -->
       <g>
         <text x="290" y="55" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="600">🌆 Evening Star</text>
-        <text x="290" y="70" text-anchor="middle" fill="#94a3b8" font-size="10">Өсөлтийн оройд</text>
+        <text x="290" y="70" text-anchor="middle" fill="#5A7090" font-size="10">Өсөлтийн оройд</text>
         <!-- Big green -->
         <line x1="250" y1="100" x2="250" y2="110" stroke="#10b981" stroke-width="2"/>
         <rect x="242" y="110" width="16" height="75" fill="#10b981"/>
         <line x1="250" y1="185" x2="250" y2="195" stroke="#10b981" stroke-width="2"/>
         <!-- Small middle -->
-        <line x1="290" y1="85" x2="290" y2="120" stroke="#94a3b8" stroke-width="1.5"/>
-        <rect x="284" y="98" width="12" height="12" fill="#94a3b8"/>
+        <line x1="290" y1="85" x2="290" y2="120" stroke="#5A7090" stroke-width="1.5"/>
+        <rect x="284" y="98" width="12" height="12" fill="#5A7090"/>
         <!-- Big red -->
         <line x1="330" y1="105" x2="330" y2="115" stroke="#ef4444" stroke-width="2"/>
         <rect x="322" y="115" width="16" height="80" fill="#ef4444"/>
         <line x1="330" y1="195" x2="330" y2="205" stroke="#ef4444" stroke-width="2"/>
         <text x="290" y="230" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="600">↓ Bearish</text>
-        <text x="290" y="245" text-anchor="middle" fill="#94a3b8" font-size="10">reversal</text>
+        <text x="290" y="245" text-anchor="middle" fill="#5A7090" font-size="10">reversal</text>
       </g>
     </svg>`,
     
     'support-resistance': `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Support & Resistance</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Support & Resistance</text>
       <!-- Resistance line -->
       <line x1="40" y1="60" x2="340" y2="60" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>
       <text x="350" y="64" fill="#ef4444" font-size="10">R</text>
@@ -577,45 +577,45 @@ export default function TradingApp() {
       <circle cx="170" cy="155" r="4" fill="#10b981"/>
       <circle cx="230" cy="160" r="4" fill="#10b981"/>
       <circle cx="290" cy="165" r="4" fill="#10b981"/>
-      <text x="190" y="210" text-anchor="middle" fill="#94a3b8" font-size="11">Үнэ түвшинүүд хооронд хэлбэлзэнэ</text>
-      <text x="190" y="228" text-anchor="middle" fill="#94a3b8" font-size="10">Resistance дээр зарна, Support дээр авна</text>
+      <text x="190" y="210" text-anchor="middle" fill="#5A7090" font-size="11">Үнэ түвшинүүд хооронд хэлбэлзэнэ</text>
+      <text x="190" y="228" text-anchor="middle" fill="#5A7090" font-size="10">Resistance дээр зарна, Support дээр авна</text>
     </svg>`,
     
     'trend-types': `<svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Зах зээлийн 3 төрөл</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Зах зээлийн 3 төрөл</text>
       <!-- Uptrend -->
       <g>
         <text x="80" y="60" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Uptrend</text>
         <polyline points="30,140 50,120 65,130 85,90 100,100 120,70 135,80" 
           fill="none" stroke="#10b981" stroke-width="2"/>
-        <text x="80" y="170" text-anchor="middle" fill="#94a3b8" font-size="9">HH + HL</text>
-        <text x="80" y="185" text-anchor="middle" fill="#94a3b8" font-size="9">↗ дээш</text>
+        <text x="80" y="170" text-anchor="middle" fill="#5A7090" font-size="9">HH + HL</text>
+        <text x="80" y="185" text-anchor="middle" fill="#5A7090" font-size="9">↗ дээш</text>
       </g>
       <!-- Downtrend -->
       <g>
         <text x="190" y="60" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="600">Downtrend</text>
         <polyline points="140,80 160,100 175,90 195,120 210,110 230,140 245,130" 
           fill="none" stroke="#ef4444" stroke-width="2"/>
-        <text x="190" y="170" text-anchor="middle" fill="#94a3b8" font-size="9">LH + LL</text>
-        <text x="190" y="185" text-anchor="middle" fill="#94a3b8" font-size="9">↘ доош</text>
+        <text x="190" y="170" text-anchor="middle" fill="#5A7090" font-size="9">LH + LL</text>
+        <text x="190" y="185" text-anchor="middle" fill="#5A7090" font-size="9">↘ доош</text>
       </g>
       <!-- Range -->
       <g>
-        <text x="305" y="60" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Range</text>
-        <line x1="255" y1="90" x2="355" y2="90" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="2,2"/>
-        <line x1="255" y1="135" x2="355" y2="135" stroke="#fbbf24" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <text x="305" y="60" text-anchor="middle" fill="#5A7090" font-size="11" font-weight="600">Range</text>
+        <line x1="255" y1="90" x2="355" y2="90" stroke="#5A7090" stroke-width="0.8" stroke-dasharray="2,2"/>
+        <line x1="255" y1="135" x2="355" y2="135" stroke="#5A7090" stroke-width="0.8" stroke-dasharray="2,2"/>
         <polyline points="260,130 275,95 290,130 310,95 325,130 345,95" 
-          fill="none" stroke="#fbbf24" stroke-width="2"/>
-        <text x="305" y="170" text-anchor="middle" fill="#94a3b8" font-size="9">Sideways</text>
-        <text x="305" y="185" text-anchor="middle" fill="#94a3b8" font-size="9">↔ хажуу</text>
+          fill="none" stroke="#5A7090" stroke-width="2"/>
+        <text x="305" y="170" text-anchor="middle" fill="#5A7090" font-size="9">Sideways</text>
+        <text x="305" y="185" text-anchor="middle" fill="#5A7090" font-size="9">↔ хажуу</text>
       </g>
       <!-- Description -->
-      <text x="190" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">Зах зээл 70%-ийн хугацаанд range хийж,</text>
-      <text x="190" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">30%-ийн хугацаанд тренд хийдэг</text>
+      <text x="190" y="225" text-anchor="middle" fill="#5A7090" font-size="10">Зах зээл 70%-ийн хугацаанд range хийж,</text>
+      <text x="190" y="240" text-anchor="middle" fill="#5A7090" font-size="10">30%-ийн хугацаанд тренд хийдэг</text>
     </svg>`,
     
     'elliott-waves': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Эллиотын 8 давалгаа</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Эллиотын 8 давалгаа</text>
       <!-- Wave path -->
       <polyline points="30,210 70,170 50,200 130,80 100,140 200,40 170,90 250,140 280,90 330,180" 
         fill="none" stroke="#60a5fa" stroke-width="2"/>
@@ -630,7 +630,7 @@ export default function TradingApp() {
         <circle cx="50" cy="200" r="10" fill="#ef4444"/>
         <text x="50" y="204" text-anchor="middle" fill="white">2</text>
         
-        <circle cx="130" cy="80" r="11" fill="#10b981" stroke="#fbbf24" stroke-width="2"/>
+        <circle cx="130" cy="80" r="11" fill="#10b981" stroke="#5A7090" stroke-width="2"/>
         <text x="130" y="84" text-anchor="middle" fill="white">3</text>
         
         <circle cx="100" cy="140" r="10" fill="#ef4444"/>
@@ -653,15 +653,15 @@ export default function TradingApp() {
       </g>
       <!-- Labels -->
       <text x="105" y="240" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Импульс (1-5)</text>
-      <text x="105" y="255" text-anchor="middle" fill="#94a3b8" font-size="10">Trend дагуу</text>
+      <text x="105" y="255" text-anchor="middle" fill="#5A7090" font-size="10">Trend дагуу</text>
       <text x="270" y="240" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="600">Засвар (A-B-C)</text>
-      <text x="270" y="255" text-anchor="middle" fill="#94a3b8" font-size="10">Trend эсрэг</text>
+      <text x="270" y="255" text-anchor="middle" fill="#5A7090" font-size="10">Trend эсрэг</text>
       <!-- Wave 3 highlight -->
-      <text x="155" y="68" fill="#fbbf24" font-size="9" font-weight="600">⭐ Хамгийн хүчтэй</text>
+      <text x="155" y="68" fill="#5A7090" font-size="9" font-weight="600">⭐ Хамгийн хүчтэй</text>
     </svg>`,
     
     'elliott-rules': `<svg viewBox="0 0 380 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Эллиотын 3 үндсэн дүрэм</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Эллиотын 3 үндсэн дүрэм</text>
       <!-- Rule 1 -->
       <g>
         <rect x="20" y="45" width="340" height="80" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="0.5"/>
@@ -680,13 +680,13 @@ export default function TradingApp() {
       </g>
       <!-- Rule 2 -->
       <g>
-        <rect x="20" y="135" width="340" height="80" rx="8" fill="#1e293b" stroke="#fbbf24" stroke-width="0.5"/>
-        <text x="35" y="155" fill="#fbbf24" font-size="11" font-weight="700">Дүрэм 2: Wave 3</text>
+        <rect x="20" y="135" width="340" height="80" rx="8" fill="#1e293b" stroke="#5A7090" stroke-width="0.5"/>
+        <text x="35" y="155" fill="#5A7090" font-size="11" font-weight="700">Дүрэм 2: Wave 3</text>
         <text x="35" y="172" fill="#cbd5e1" font-size="10">ХАМГИЙН БОГИНО байж болохгүй.</text>
         <text x="35" y="186" fill="#cbd5e1" font-size="10">Ихэвчлэн хамгийн урт.</text>
         <!-- Mini chart -->
         <polyline points="240,205 260,185 250,200 290,150 275,180 305,165" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
-        <circle cx="290" cy="150" r="6" fill="#fbbf24" stroke="white" stroke-width="1"/>
+        <circle cx="290" cy="150" r="6" fill="#5A7090" stroke="white" stroke-width="1"/>
         <text x="290" y="153" text-anchor="middle" fill="white" font-size="7" font-weight="700">3</text>
       </g>
       <!-- Rule 3 -->
@@ -705,20 +705,20 @@ export default function TradingApp() {
     </svg>`,
     
     'fibonacci': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Fibonacci Retracement</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Fibonacci Retracement</text>
       <!-- Price movement -->
       <line x1="50" y1="220" x2="200" y2="60" stroke="#10b981" stroke-width="2"/>
       <circle cx="50" cy="220" r="5" fill="#10b981"/>
-      <text x="40" y="237" fill="#94a3b8" font-size="10">0%</text>
+      <text x="40" y="237" fill="#5A7090" font-size="10">0%</text>
       <circle cx="200" cy="60" r="5" fill="#10b981"/>
-      <text x="200" y="55" fill="#94a3b8" font-size="10">100%</text>
+      <text x="200" y="55" fill="#5A7090" font-size="10">100%</text>
       <!-- Fib levels -->
       <g font-size="9">
-        <line x1="50" y1="60" x2="340" y2="60" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="345" y="63" fill="#94a3b8">1.000</text>
+        <line x1="50" y1="60" x2="340" y2="60" stroke="#5A7090" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="345" y="63" fill="#5A7090">1.000</text>
         
-        <line x1="50" y1="98" x2="340" y2="98" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="345" y="101" fill="#fbbf24">0.764</text>
+        <line x1="50" y1="98" x2="340" y2="98" stroke="#5A7090" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="345" y="101" fill="#5A7090">0.764</text>
         
         <line x1="50" y1="121" x2="340" y2="121" stroke="#10b981" stroke-width="1" stroke-dasharray="3,2"/>
         <text x="345" y="124" fill="#10b981" font-weight="600">0.618 ⭐</text>
@@ -729,24 +729,24 @@ export default function TradingApp() {
         <line x1="50" y1="159" x2="340" y2="159" stroke="#a78bfa" stroke-width="0.5" stroke-dasharray="2,2"/>
         <text x="345" y="162" fill="#a78bfa">0.382</text>
         
-        <line x1="50" y1="182" x2="340" y2="182" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="345" y="185" fill="#94a3b8">0.236</text>
+        <line x1="50" y1="182" x2="340" y2="182" stroke="#5A7090" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="345" y="185" fill="#5A7090">0.236</text>
         
-        <line x1="50" y1="220" x2="340" y2="220" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2,2"/>
-        <text x="345" y="223" fill="#94a3b8">0.000</text>
+        <line x1="50" y1="220" x2="340" y2="220" stroke="#5A7090" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="345" y="223" fill="#5A7090">0.000</text>
       </g>
       <!-- Retracement -->
-      <polyline points="200,60 250,121 280,90 310,140" fill="none" stroke="#fbbf24" stroke-width="2"/>
-      <circle cx="250" cy="121" r="4" fill="#fbbf24"/>
-      <text x="190" y="265" text-anchor="middle" fill="#94a3b8" font-size="10">Алтан харьцаа: 0.618 — хамгийн чухал retracement</text>
+      <polyline points="200,60 250,121 280,90 310,140" fill="none" stroke="#5A7090" stroke-width="2"/>
+      <circle cx="250" cy="121" r="4" fill="#5A7090"/>
+      <text x="190" y="265" text-anchor="middle" fill="#5A7090" font-size="10">Алтан харьцаа: 0.618 — хамгийн чухал retracement</text>
     </svg>`,
     
     'corrective-waves': `<svg viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">Засварын 3 төрөл</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="600">Засварын 3 төрөл</text>
       <!-- Zigzag -->
       <g>
         <text x="65" y="55" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="600">Zigzag</text>
-        <text x="65" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">5-3-5</text>
+        <text x="65" y="70" text-anchor="middle" fill="#5A7090" font-size="9">5-3-5</text>
         <polyline points="30,90 50,150 65,115 85,180" fill="none" stroke="#ef4444" stroke-width="2"/>
         <circle cx="30" cy="90" r="6" fill="#ef4444"/>
         <text x="30" y="93" text-anchor="middle" fill="white" font-size="8" font-weight="700">A</text>
@@ -756,31 +756,31 @@ export default function TradingApp() {
         <text x="65" y="118" text-anchor="middle" fill="white" font-size="8" font-weight="700">B</text>
         <circle cx="85" cy="180" r="6" fill="#ef4444"/>
         <text x="85" y="183" text-anchor="middle" fill="white" font-size="8" font-weight="700">C</text>
-        <text x="60" y="220" text-anchor="middle" fill="#94a3b8" font-size="9">Хурц,</text>
-        <text x="60" y="234" text-anchor="middle" fill="#94a3b8" font-size="9">эгц</text>
-        <text x="60" y="255" text-anchor="middle" fill="#fbbf24" font-size="9">Wave 2-д</text>
+        <text x="60" y="220" text-anchor="middle" fill="#5A7090" font-size="9">Хурц,</text>
+        <text x="60" y="234" text-anchor="middle" fill="#5A7090" font-size="9">эгц</text>
+        <text x="60" y="255" text-anchor="middle" fill="#5A7090" font-size="9">Wave 2-д</text>
       </g>
       <!-- Flat -->
       <g>
-        <text x="190" y="55" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Flat</text>
-        <text x="190" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">3-3-5</text>
-        <polyline points="155,90 175,150 195,90 215,150" fill="none" stroke="#fbbf24" stroke-width="2"/>
-        <circle cx="155" cy="90" r="6" fill="#fbbf24"/>
+        <text x="190" y="55" text-anchor="middle" fill="#5A7090" font-size="11" font-weight="600">Flat</text>
+        <text x="190" y="70" text-anchor="middle" fill="#5A7090" font-size="9">3-3-5</text>
+        <polyline points="155,90 175,150 195,90 215,150" fill="none" stroke="#5A7090" stroke-width="2"/>
+        <circle cx="155" cy="90" r="6" fill="#5A7090"/>
         <text x="155" y="93" text-anchor="middle" fill="white" font-size="8" font-weight="700">A</text>
-        <circle cx="175" cy="150" r="6" fill="#fbbf24"/>
+        <circle cx="175" cy="150" r="6" fill="#5A7090"/>
         <text x="175" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="700">·</text>
-        <circle cx="195" cy="90" r="6" fill="#fbbf24"/>
+        <circle cx="195" cy="90" r="6" fill="#5A7090"/>
         <text x="195" y="93" text-anchor="middle" fill="white" font-size="8" font-weight="700">B</text>
-        <circle cx="215" cy="150" r="6" fill="#fbbf24"/>
+        <circle cx="215" cy="150" r="6" fill="#5A7090"/>
         <text x="215" y="153" text-anchor="middle" fill="white" font-size="8" font-weight="700">C</text>
-        <text x="190" y="220" text-anchor="middle" fill="#94a3b8" font-size="9">Хажуу</text>
-        <text x="190" y="234" text-anchor="middle" fill="#94a3b8" font-size="9">тийш</text>
-        <text x="190" y="255" text-anchor="middle" fill="#fbbf24" font-size="9">Wave 4-д</text>
+        <text x="190" y="220" text-anchor="middle" fill="#5A7090" font-size="9">Хажуу</text>
+        <text x="190" y="234" text-anchor="middle" fill="#5A7090" font-size="9">тийш</text>
+        <text x="190" y="255" text-anchor="middle" fill="#5A7090" font-size="9">Wave 4-д</text>
       </g>
       <!-- Triangle -->
       <g>
         <text x="320" y="55" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="600">Triangle</text>
-        <text x="320" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">3-3-3-3-3</text>
+        <text x="320" y="70" text-anchor="middle" fill="#5A7090" font-size="9">3-3-3-3-3</text>
         <polyline points="285,90 305,160 320,105 335,150 350,120" fill="none" stroke="#a78bfa" stroke-width="2"/>
         <line x1="285" y1="90" x2="350" y2="120" stroke="#a78bfa" stroke-width="0.5" stroke-dasharray="2,2"/>
         <line x1="305" y1="160" x2="350" y2="120" stroke="#a78bfa" stroke-width="0.5" stroke-dasharray="2,2"/>
@@ -789,19 +789,19 @@ export default function TradingApp() {
         <text x="319" y="98" fill="#a78bfa" font-size="7" font-weight="700">C</text>
         <text x="338" y="160" fill="#a78bfa" font-size="7" font-weight="700">D</text>
         <text x="353" y="118" fill="#a78bfa" font-size="7" font-weight="700">E</text>
-        <text x="320" y="220" text-anchor="middle" fill="#94a3b8" font-size="9">Агшиж буй</text>
-        <text x="320" y="234" text-anchor="middle" fill="#94a3b8" font-size="9">5 давалгаа</text>
-        <text x="320" y="255" text-anchor="middle" fill="#fbbf24" font-size="9">Wave 4 / B</text>
+        <text x="320" y="220" text-anchor="middle" fill="#5A7090" font-size="9">Агшиж буй</text>
+        <text x="320" y="234" text-anchor="middle" fill="#5A7090" font-size="9">5 давалгаа</text>
+        <text x="320" y="255" text-anchor="middle" fill="#5A7090" font-size="9">Wave 4 / B</text>
       </g>
     </svg>`,
     
     'wave-3': `<svg viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
-      <text x="190" y="25" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">⭐ Wave 3 — Хамгийн ашигтай</text>
+      <text x="190" y="25" text-anchor="middle" fill="#5A7090" font-size="13" font-weight="700">⭐ Wave 3 — Хамгийн ашигтай</text>
       <!-- Wave path emphasizing wave 3 -->
       <polyline points="30,200 60,170 50,190 180,50 150,120 230,30 210,70 280,110 310,75 350,150" 
         fill="none" stroke="#475569" stroke-width="1.5"/>
       <!-- Highlight wave 3 -->
-      <line x1="50" y1="190" x2="180" y2="50" stroke="#fbbf24" stroke-width="3"/>
+      <line x1="50" y1="190" x2="180" y2="50" stroke="#5A7090" stroke-width="3"/>
       <!-- Numbers -->
       <g font-size="10" font-weight="700">
         <circle cx="30" cy="200" r="8" fill="#1e293b" stroke="#60a5fa"/>
@@ -810,7 +810,7 @@ export default function TradingApp() {
         <text x="60" y="173" text-anchor="middle" fill="white">1</text>
         <circle cx="50" cy="190" r="8" fill="#ef4444"/>
         <text x="50" y="193" text-anchor="middle" fill="white">2</text>
-        <circle cx="180" cy="50" r="11" fill="#fbbf24" stroke="white" stroke-width="2"/>
+        <circle cx="180" cy="50" r="11" fill="#5A7090" stroke="white" stroke-width="2"/>
         <text x="180" y="54" text-anchor="middle" fill="white">3</text>
         <circle cx="150" cy="120" r="8" fill="#ef4444"/>
         <text x="150" y="123" text-anchor="middle" fill="white">4</text>
@@ -818,13 +818,13 @@ export default function TradingApp() {
         <text x="230" y="33" text-anchor="middle" fill="white">5</text>
       </g>
       <!-- Wave 3 properties -->
-      <text x="100" y="125" fill="#fbbf24" font-size="11" font-weight="600">Wave 3</text>
-      <text x="100" y="140" fill="#94a3b8" font-size="9">Хамгийн урт</text>
-      <text x="100" y="153" fill="#94a3b8" font-size="9">Хамгийн хурдан</text>
-      <text x="100" y="166" fill="#94a3b8" font-size="9">Volume хамгийн их</text>
+      <text x="100" y="125" fill="#5A7090" font-size="11" font-weight="600">Wave 3</text>
+      <text x="100" y="140" fill="#5A7090" font-size="9">Хамгийн урт</text>
+      <text x="100" y="153" fill="#5A7090" font-size="9">Хамгийн хурдан</text>
+      <text x="100" y="166" fill="#5A7090" font-size="9">Volume хамгийн их</text>
       <!-- Target -->
-      <line x1="180" y1="50" x2="180" y2="225" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="2,2"/>
-      <text x="190" y="223" fill="#fbbf24" font-size="9">Target: Wave 1 × 1.618</text>
+      <line x1="180" y1="50" x2="180" y2="225" stroke="#5A7090" stroke-width="0.5" stroke-dasharray="2,2"/>
+      <text x="190" y="223" fill="#5A7090" font-size="9">Target: Wave 1 × 1.618</text>
     </svg>`
   };
 
@@ -872,8 +872,8 @@ export default function TradingApp() {
     { term: 'Golden Ratio', def: 'Алтан харьцаа = 0.618 (эсвэл 1.618). Элиот ашигладаг гол харьцаа' },
     { term: 'Retracement', def: 'Үнэ буцах түвшин. Нийтлэг: 38.2%, 50%, 61.8%' },
     { term: 'Extension', def: 'Импульс давалгааны target түвшин. 100%, 161.8%, 261.8%' },
-    { term: 'Bull Trap', def: 'Wave B-ийн нэр томъёо. Худалдан авагчдыг хууртаж зарж авдаг' },
-    { term: 'Killer Wave', def: 'Wave C-ийн нэр томъёо. Long position-уудыг устгадаг' },
+    { term: 'Bull Trap', def: 'Wave B-ийн нэр томьёо. Худалдан авагчдыг хууртаж зарж авдаг' },
+    { term: 'Killer Wave', def: 'Wave C-ийн нэр томьёо. Long position-уудыг устгадаг' },
     // Анализ
     { term: 'RSI', def: 'Relative Strength Index — Хөрөнгө хэт их худалдан авагдсан/зарагдсан эсэхийг харуулах индикатор' },
     { term: 'MACD', def: 'Moving Average Convergence Divergence — Трендийг харуулах индикатор' },
@@ -1112,7 +1112,7 @@ export default function TradingApp() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-cream-100 text-navy-800">
+    <div className="min-h-screen bg-navy-50 text-navy-800">
       <div className="bg-gold-400/20 border-b border-gold-500/40 px-4 py-2 text-center text-xs text-navy-700">
         ⚠️ Боловсролын зорилготой. Арилжаа эрсдэлтэй — өөрийн хариуцлагаар хийгээрэй.
       </div>
@@ -1145,7 +1145,7 @@ export default function TradingApp() {
             <NavButton icon={BookOpen} label="Хичээлүүд" target="lessons" />
             <NavButton icon={Library} label="Номын сан" target="library" />
             <NavButton icon={Calculator} label="Тооцоологчид" target="calc" />
-            <NavButton icon={FileText} label="Нэр томъёо" target="glossary" />
+            <NavButton icon={FileText} label="Нэр томьёо" target="glossary" />
             <NavButton icon={Award} label="Прогресс" target="progress" />
           </nav>
 
@@ -1176,7 +1176,7 @@ export default function TradingApp() {
                   <p className="text-base sm:text-lg text-navy-700 mb-6">Анхан шатнаас Элиотын давалгаа хүртэл — арилжааны бүрэн академи.</p>
                   <div className="flex flex-wrap gap-3">
                     <button onClick={() => setView('lessons')}
-                      className="px-5 sm:px-6 py-3 bg-navy-700 hover:bg-navy-800 rounded-xl font-bold transition-all shadow-lg shadow-navy-500/20 text-sm sm:text-base">
+                      className="px-5 sm:px-6 py-3 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-bold transition-all shadow-lg shadow-navy-500/20 text-sm sm:text-base">
                       Сурч эхлэх →
                     </button>
                     <button onClick={() => setView('library')}
@@ -1204,7 +1204,7 @@ export default function TradingApp() {
                   </button>
                   <button onClick={() => setView('glossary')} className="bg-white shadow-sm hover:bg-white border border-navy-100 rounded-2xl p-5 text-left transition-all">
                     <FileText className="text-gold-600 mb-3" size={24} />
-                    <div className="font-bold mb-1">{glossary.length}+ нэр томъёо</div>
+                    <div className="font-bold mb-1">{glossary.length}+ нэр томьёо</div>
                     <div className="text-xs text-navy-500">Хайлттай</div>
                   </button>
                 </div>
@@ -1309,7 +1309,7 @@ export default function TradingApp() {
                     ← Өмнөх
                   </button>
                   <button onClick={nextStep}
-                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 rounded-xl font-medium text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 text-white rounded-xl font-medium text-sm sm:text-base">
                     {currentStep === currentLesson.steps.length - 1 ? 'Тест өгөх →' : 'Дараах →'}
                   </button>
                 </div>
@@ -1356,7 +1356,7 @@ export default function TradingApp() {
                 {!quizSubmitted ? (
                   <button onClick={submitQuiz}
                     disabled={Object.keys(quizAnswers).length < currentLesson.quiz.length}
-                    className="mt-6 w-full py-4 bg-navy-700 hover:bg-navy-800 disabled:bg-navy-50 disabled:cursor-not-allowed rounded-xl font-bold">
+                    className="mt-6 w-full py-4 bg-navy-700 hover:bg-navy-800 text-white disabled:bg-navy-50 disabled:text-navy-300 disabled:cursor-not-allowed rounded-xl font-bold">
                     Хариу шалгах
                   </button>
                 ) : (
@@ -1377,7 +1377,7 @@ export default function TradingApp() {
                             </button>
                             {!passed && (
                               <button onClick={() => { setQuizAnswers({}); setQuizSubmitted(false); }}
-                                className="px-5 py-2 bg-gold-700 hover:bg-gold-600 rounded-xl text-navy-900 font-bold">
+                                className="px-5 py-2 bg-gold-700 hover:bg-gold-600 rounded-xl text-white font-bold">
                                 Дахин оролдох
                               </button>
                             )}
@@ -1467,7 +1467,7 @@ export default function TradingApp() {
                 </div>
 
                 {/* Chapter content */}
-                <article className="bg-white/30 border border-navy-100 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 overflow-hidden">
+                <article className="bg-white shadow-sm border border-navy-100 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 overflow-hidden">
                   <div className="text-xs text-navy-700 mb-2 font-medium">Бүлэг {currentChapter + 1}</div>
                   <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-black mb-5 sm:mb-6 text-navy-800 break-words leading-tight">
                     {currentBook.chapters[currentChapter].title}
@@ -1494,7 +1494,7 @@ export default function TradingApp() {
                   </button>
                   <button onClick={() => setCurrentChapter(Math.min(currentBook.chapters.length - 1, currentChapter + 1))}
                     disabled={currentChapter === currentBook.chapters.length - 1}
-                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 text-white disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
                     <span>Дараах</span> <ChevronRight size={18} />
                   </button>
                 </div>
@@ -1517,12 +1517,12 @@ export default function TradingApp() {
             {/* GLOSSARY */}
             {view === 'glossary' && (
               <div>
-                <h1 className="text-3xl font-black mb-2">Нэр томъёоны толь 📖</h1>
-                <p className="text-navy-500 mb-4">{glossary.length} нэр томъёо</p>
+                <h1 className="text-3xl font-black mb-2">Нэр томьёоны толь 📖</h1>
+                <p className="text-navy-500 mb-4">{glossary.length} нэр томьёо</p>
                 <div className="relative mb-5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" size={18} />
                   <input value={glossarySearch} onChange={e => setGlossarySearch(e.target.value)}
-                    placeholder="Нэр томъёо хайх..."
+                    placeholder="Нэр томьёо хайх..."
                     className="w-full pl-10 pr-4 py-3 bg-white shadow-sm border border-navy-100 rounded-xl text-navy-800 outline-none focus:border-navy-700"/>
                 </div>
                 <div className="grid gap-3">
