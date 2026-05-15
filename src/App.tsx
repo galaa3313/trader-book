@@ -1001,7 +1001,7 @@ export default function TradingApp() {
 
     const risk = Math.abs(entry - sl);
     const reward = Math.abs(tp - entry);
-    const ratio = risk > 0 ? (reward / risk).toFixed(2) : 0;
+    const ratio = risk > 0 ? reward / risk : 0;
     const isGood = ratio >= 2;
 
     return (
@@ -1039,7 +1039,7 @@ export default function TradingApp() {
         </div>
         <div className={`mt-3 p-4 rounded-xl border ${isGood ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
           <div className="text-sm text-slate-400">R:R харьцаа</div>
-          <div className={`text-3xl font-bold ${isGood ? 'text-emerald-400' : 'text-amber-400'}`}>1 : {ratio}</div>
+          <div className={`text-3xl font-bold ${isGood ? 'text-emerald-400' : 'text-amber-400'}`}>1 : {ratio.toFixed(2)}</div>
           <div className="text-xs text-slate-400 mt-1">
             {isGood ? '✓ Сайн харьцаа (1:2 ба түүнээс дээш)' : '⚠️ 1:2-оос доош — анхааралтай'}
           </div>
@@ -1246,7 +1246,7 @@ export default function TradingApp() {
               <div>
                 <h1 className="text-3xl font-black mb-2">Хичээлүүд</h1>
                 <p className="text-slate-400 mb-6">Дарааллаар нь судлахыг зөвлөж байна</p>
-                {Object.entries(lessonsByLevel).map(([level, levelLessons]) => {
+                {Object.entries(lessonsByLevel).map(([level, levelLessons]: [string, any]) => {
                   const levelIcon = level === 'Анхан шат' ? '🎓' : level === 'Дунд шат' ? '🕯️' : '🌊';
                   return (
                     <div key={level} className="mb-8">
