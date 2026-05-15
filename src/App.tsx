@@ -245,8 +245,8 @@ export default function TradingApp() {
       title: 'The Candlestick Trading Bible',
       author: 'Munehisa Homma уламжлал дээр үндэслэсэн',
       icon: '🕯️',
-      color: 'from-amber-500/20 to-orange-700/10',
-      borderColor: 'border-amber-500/30',
+      color: 'from-gold-500/20 to-gold-700/10',
+      borderColor: 'border-gold-700/30',
       description: 'Лаан график паттернууд болон price action арилжааны бүрэн гарын авлага',
       chapters: [
         {
@@ -299,8 +299,8 @@ export default function TradingApp() {
       title: 'Элиотын Давалгааны Онол',
       author: 'Ralph Nelson Elliott',
       icon: '🌊',
-      color: 'from-blue-500/20 to-cyan-700/10',
-      borderColor: 'border-blue-500/30',
+      color: 'from-navy-400/20 to-navy-600/10',
+      borderColor: 'border-navy-700/30',
       description: 'Зах зээлийн давтамжит давалгаан хэлбэрийг таних бүрэн гарын авлага',
       chapters: [
         {
@@ -932,7 +932,7 @@ export default function TradingApp() {
     <button
       onClick={() => { setView(target); setMenuOpen(false); }}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left ${
-        view === target ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-300 hover:bg-slate-800'
+        view === target ? 'bg-navy-700 text-white shadow-lg shadow-navy-500/20' : 'text-navy-700 hover:bg-white'
       }`}
     >
       <Icon size={20} />
@@ -953,42 +953,42 @@ export default function TradingApp() {
     const positionValue = positionSize * entry;
 
     return (
-      <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Calculator className="text-emerald-400" size={24} />
+      <div className="bg-white shadow-sm rounded-2xl p-6 border border-navy-100">
+        <h3 className="text-xl font-bold text-navy-800 mb-4 flex items-center gap-2">
+          <Calculator className="text-navy-700" size={24} />
           Position Size тооцоологч
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-slate-400">Дансны хэмжээ ($)</label>
+            <label className="text-sm text-navy-500">Дансны хэмжээ ($)</label>
             <input type="number" value={account} onChange={e => setAccount(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-emerald-500 outline-none"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 focus:border-navy-700 outline-none"/>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Эрсдэл (%)</label>
+            <label className="text-sm text-navy-500">Эрсдэл (%)</label>
             <input type="number" step="0.1" value={riskPct} onChange={e => setRiskPct(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-emerald-500 outline-none"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 focus:border-navy-700 outline-none"/>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm text-slate-400">Орох үнэ</label>
+              <label className="text-sm text-navy-500">Орох үнэ</label>
               <input type="number" value={entry} onChange={e => setEntry(+e.target.value)}
-                className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-emerald-500 outline-none"/>
+                className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 focus:border-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="text-sm text-slate-400">Stop Loss</label>
+              <label className="text-sm text-navy-500">Stop Loss</label>
               <input type="number" value={stopLoss} onChange={e => setStopLoss(+e.target.value)}
-                className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-emerald-500 outline-none"/>
+                className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 focus:border-navy-700 outline-none"/>
             </div>
           </div>
         </div>
-        <div className="mt-5 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-          <div className="text-sm text-slate-400">Эрсдэлийн дүн</div>
-          <div className="text-2xl font-bold text-emerald-400">${riskAmount.toFixed(2)}</div>
-          <div className="text-sm text-slate-400 mt-2">Position size (нэгж)</div>
-          <div className="text-2xl font-bold text-white">{positionSize.toFixed(2)}</div>
-          <div className="text-sm text-slate-400 mt-2">Position-ы үнэ</div>
-          <div className="text-2xl font-bold text-white">${positionValue.toFixed(2)}</div>
+        <div className="mt-5 p-4 bg-navy-700/10 border border-navy-700/30 rounded-xl">
+          <div className="text-sm text-navy-500">Эрсдэлийн дүн</div>
+          <div className="text-2xl font-bold text-navy-700">${riskAmount.toFixed(2)}</div>
+          <div className="text-sm text-navy-500 mt-2">Position size (нэгж)</div>
+          <div className="text-2xl font-bold text-navy-800">{positionSize.toFixed(2)}</div>
+          <div className="text-sm text-navy-500 mt-2">Position-ы үнэ</div>
+          <div className="text-2xl font-bold text-navy-800">${positionValue.toFixed(2)}</div>
         </div>
       </div>
     );
@@ -1005,42 +1005,42 @@ export default function TradingApp() {
     const isGood = ratio >= 2;
 
     return (
-      <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <TrendingUp className="text-emerald-400" size={24} />
+      <div className="bg-white shadow-sm rounded-2xl p-6 border border-navy-100">
+        <h3 className="text-xl font-bold text-navy-800 mb-4 flex items-center gap-2">
+          <TrendingUp className="text-navy-700" size={24} />
           Risk/Reward тооцоологч
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-slate-400">Орох үнэ</label>
+            <label className="text-sm text-navy-500">Орох үнэ</label>
             <input type="number" value={entry} onChange={e => setEntry(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Stop Loss</label>
+            <label className="text-sm text-navy-500">Stop Loss</label>
             <input type="number" value={sl} onChange={e => setSl(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Take Profit</label>
+            <label className="text-sm text-navy-500">Take Profit</label>
             <input type="number" value={tp} onChange={e => setTp(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-            <div className="text-xs text-slate-400">Эрсдэл</div>
-            <div className="text-xl font-bold text-red-400">${risk.toFixed(2)}</div>
+            <div className="text-xs text-navy-500">Эрсдэл</div>
+            <div className="text-xl font-bold text-red-600">${risk.toFixed(2)}</div>
           </div>
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-            <div className="text-xs text-slate-400">Боломжит ашиг</div>
-            <div className="text-xl font-bold text-emerald-400">${reward.toFixed(2)}</div>
+          <div className="p-3 bg-navy-700/10 border border-navy-700/30 rounded-xl">
+            <div className="text-xs text-navy-500">Боломжит ашиг</div>
+            <div className="text-xl font-bold text-navy-700">${reward.toFixed(2)}</div>
           </div>
         </div>
-        <div className={`mt-3 p-4 rounded-xl border ${isGood ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-          <div className="text-sm text-slate-400">R:R харьцаа</div>
-          <div className={`text-3xl font-bold ${isGood ? 'text-emerald-400' : 'text-amber-400'}`}>1 : {ratio.toFixed(2)}</div>
-          <div className="text-xs text-slate-400 mt-1">
+        <div className={`mt-3 p-4 rounded-xl border ${isGood ? 'bg-navy-700/10 border-navy-700/30' : 'bg-gold-700/10 border-gold-700/30'}`}>
+          <div className="text-sm text-navy-500">R:R харьцаа</div>
+          <div className={`text-3xl font-bold ${isGood ? 'text-navy-700' : 'text-gold-700'}`}>1 : {ratio.toFixed(2)}</div>
+          <div className="text-xs text-navy-500 mt-1">
             {isGood ? '✓ Сайн харьцаа (1:2 ба түүнээс дээш)' : '⚠️ 1:2-оос доош — анхааралтай'}
           </div>
         </div>
@@ -1059,44 +1059,44 @@ export default function TradingApp() {
     const isProfit = pnl >= 0;
 
     return (
-      <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Calculator className="text-emerald-400" size={24} />
+      <div className="bg-white shadow-sm rounded-2xl p-6 border border-navy-100">
+        <h3 className="text-xl font-bold text-navy-800 mb-4 flex items-center gap-2">
+          <Calculator className="text-navy-700" size={24} />
           Profit/Loss тооцоологч
         </h3>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setType('long')}
-              className={`py-2 rounded-lg font-medium ${type === 'long' ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-slate-400'}`}>
+              className={`py-2 rounded-lg font-medium ${type === 'long' ? 'bg-navy-700 text-white' : 'bg-cream-200 text-navy-500'}`}>
               ⬆️ Long
             </button>
             <button onClick={() => setType('short')}
-              className={`py-2 rounded-lg font-medium ${type === 'short' ? 'bg-red-500 text-white' : 'bg-slate-900 text-slate-400'}`}>
+              className={`py-2 rounded-lg font-medium ${type === 'short' ? 'bg-red-500 text-white' : 'bg-cream-200 text-navy-500'}`}>
               ⬇️ Short
             </button>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Орох үнэ</label>
+            <label className="text-sm text-navy-500">Орох үнэ</label>
             <input type="number" value={entry} onChange={e => setEntry(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Гарах үнэ</label>
+            <label className="text-sm text-navy-500">Гарах үнэ</label>
             <input type="number" value={exit} onChange={e => setExit(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
           <div>
-            <label className="text-sm text-slate-400">Position size (нэгж)</label>
+            <label className="text-sm text-navy-500">Position size (нэгж)</label>
             <input type="number" value={size} onChange={e => setSize(+e.target.value)}
-              className="w-full mt-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white outline-none focus:border-emerald-500"/>
+              className="w-full mt-1 px-4 py-2 bg-cream-200 border border-navy-100 rounded-lg text-navy-800 outline-none focus:border-navy-700"/>
           </div>
         </div>
-        <div className={`mt-5 p-4 rounded-xl border ${isProfit ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
-          <div className="text-sm text-slate-400">{isProfit ? 'Ашиг' : 'Алдагдал'}</div>
-          <div className={`text-3xl font-bold ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className={`mt-5 p-4 rounded-xl border ${isProfit ? 'bg-navy-700/10 border-navy-700/30' : 'bg-red-500/10 border-red-500/30'}`}>
+          <div className="text-sm text-navy-500">{isProfit ? 'Ашиг' : 'Алдагдал'}</div>
+          <div className={`text-3xl font-bold ${isProfit ? 'text-navy-700' : 'text-red-600'}`}>
             {isProfit ? '+' : ''}{pnl.toFixed(2)} $
           </div>
-          <div className={`text-sm font-medium ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
+          <div className={`text-sm font-medium ${isProfit ? 'text-navy-700' : 'text-red-600'}`}>
             {isProfit ? '+' : ''}{pnlPct}%
           </div>
         </div>
@@ -1112,8 +1112,8 @@ export default function TradingApp() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white">
-      <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-200">
+    <div className="min-h-screen bg-cream-100 text-navy-800">
+      <div className="bg-gold-400/20 border-b border-gold-500/40 px-4 py-2 text-center text-xs text-navy-700">
         ⚠️ Боловсролын зорилготой. Арилжаа эрсдэлтэй — өөрийн хариуцлагаар хийгээрэй.
       </div>
 
@@ -1124,18 +1124,18 @@ export default function TradingApp() {
             className="lg:hidden fixed inset-0 bg-black/60 z-30 backdrop-blur-sm"/>
         )}
         
-        <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-slate-900/95 backdrop-blur border-r border-slate-800 p-5 z-40 transition-transform overflow-y-auto flex-shrink-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <aside className={`fixed lg:sticky top-0 left-0 h-screen w-72 bg-white/95 backdrop-blur border-r border-navy-100 p-5 z-40 transition-transform overflow-y-auto flex-shrink-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center">
                 <TrendingUp size={22} className="text-white" />
               </div>
               <div>
                 <div className="font-bold text-lg">Trading 101</div>
-                <div className="text-xs text-slate-400">Бүх шатанд</div>
+                <div className="text-xs text-navy-500">Бүх шатанд</div>
               </div>
             </div>
-            <button onClick={() => setMenuOpen(false)} className="lg:hidden text-slate-400">
+            <button onClick={() => setMenuOpen(false)} className="lg:hidden text-navy-500">
               <X size={20} />
             </button>
           </div>
@@ -1149,18 +1149,18 @@ export default function TradingApp() {
             <NavButton icon={Award} label="Прогресс" target="progress" />
           </nav>
 
-          <div className="mt-8 p-4 bg-slate-800/50 rounded-xl">
-            <div className="text-xs text-slate-400 mb-1">Ерөнхий прогресс</div>
+          <div className="mt-8 p-4 bg-white shadow-sm rounded-xl">
+            <div className="text-xs text-navy-500 mb-1">Ерөнхий прогресс</div>
             <div className="text-2xl font-bold mb-2">{completedCount}/{lessons.length}</div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all" style={{ width: `${overallProgress}%` }} />
+            <div className="h-2 bg-navy-50 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-navy-700 to-navy-900 transition-all" style={{ width: `${overallProgress}%` }} />
             </div>
           </div>
         </aside>
 
         <main className="flex-1 min-w-0 min-h-screen">
-          <div className="lg:hidden p-4 flex items-center justify-between border-b border-slate-800 sticky top-0 bg-slate-950/95 backdrop-blur z-30">
-            <button onClick={() => setMenuOpen(true)} className="text-white">
+          <div className="lg:hidden p-4 flex items-center justify-between border-b border-navy-100 sticky top-0 bg-white/95 backdrop-blur z-30">
+            <button onClick={() => setMenuOpen(true)} className="text-navy-700">
               <Menu size={24} />
             </button>
             <div className="font-bold">Trading 101</div>
@@ -1171,68 +1171,68 @@ export default function TradingApp() {
             {/* HOME */}
             {view === 'home' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-700/10 border border-emerald-500/30 rounded-3xl p-6 sm:p-8">
+                <div className="bg-gradient-to-br from-navy-500/20 to-navy-700/10 border border-navy-700/30 rounded-3xl p-6 sm:p-8">
                   <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-3">Тавтай морил! 👋</h1>
-                  <p className="text-base sm:text-lg text-slate-300 mb-6">Анхан шатнаас Элиотын давалгаа хүртэл — арилжааны бүрэн академи.</p>
+                  <p className="text-base sm:text-lg text-navy-700 mb-6">Анхан шатнаас Элиотын давалгаа хүртэл — арилжааны бүрэн академи.</p>
                   <div className="flex flex-wrap gap-3">
                     <button onClick={() => setView('lessons')}
-                      className="px-5 sm:px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 text-sm sm:text-base">
+                      className="px-5 sm:px-6 py-3 bg-navy-700 hover:bg-navy-800 rounded-xl font-bold transition-all shadow-lg shadow-navy-500/20 text-sm sm:text-base">
                       Сурч эхлэх →
                     </button>
                     <button onClick={() => setView('library')}
-                      className="px-5 sm:px-6 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold transition-all text-sm sm:text-base">
+                      className="px-5 sm:px-6 py-3 bg-white hover:bg-navy-50 rounded-xl font-bold transition-all text-sm sm:text-base">
                       📚 Номын сан
                     </button>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <button onClick={() => setView('lessons')} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-2xl p-5 text-left transition-all">
-                    <BookOpen className="text-emerald-400 mb-3" size={24} />
+                  <button onClick={() => setView('lessons')} className="bg-white shadow-sm hover:bg-white border border-navy-100 rounded-2xl p-5 text-left transition-all">
+                    <BookOpen className="text-navy-700 mb-3" size={24} />
                     <div className="font-bold mb-1">{lessons.length} хичээл</div>
-                    <div className="text-xs text-slate-400">3 шатанд</div>
+                    <div className="text-xs text-navy-500">3 шатанд</div>
                   </button>
-                  <button onClick={() => setView('library')} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-2xl p-5 text-left transition-all">
-                    <Library className="text-amber-400 mb-3" size={24} />
+                  <button onClick={() => setView('library')} className="bg-white shadow-sm hover:bg-white border border-navy-100 rounded-2xl p-5 text-left transition-all">
+                    <Library className="text-gold-700 mb-3" size={24} />
                     <div className="font-bold mb-1">{books.length} ном</div>
-                    <div className="text-xs text-slate-400">Бүрэн орчуулга</div>
+                    <div className="text-xs text-navy-500">Бүрэн орчуулга</div>
                   </button>
-                  <button onClick={() => setView('calc')} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-2xl p-5 text-left transition-all">
-                    <Calculator className="text-blue-400 mb-3" size={24} />
+                  <button onClick={() => setView('calc')} className="bg-white shadow-sm hover:bg-white border border-navy-100 rounded-2xl p-5 text-left transition-all">
+                    <Calculator className="text-navy-600 mb-3" size={24} />
                     <div className="font-bold mb-1">3 тооцоологч</div>
-                    <div className="text-xs text-slate-400">Position, R:R, P&L</div>
+                    <div className="text-xs text-navy-500">Position, R:R, P&L</div>
                   </button>
-                  <button onClick={() => setView('glossary')} className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-2xl p-5 text-left transition-all">
-                    <FileText className="text-purple-400 mb-3" size={24} />
+                  <button onClick={() => setView('glossary')} className="bg-white shadow-sm hover:bg-white border border-navy-100 rounded-2xl p-5 text-left transition-all">
+                    <FileText className="text-gold-600 mb-3" size={24} />
                     <div className="font-bold mb-1">{glossary.length}+ нэр томъёо</div>
-                    <div className="text-xs text-slate-400">Хайлттай</div>
+                    <div className="text-xs text-navy-500">Хайлттай</div>
                   </button>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-4">
-                  <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-700/5 border border-emerald-500/20 rounded-2xl p-5">
+                  <div className="bg-gradient-to-br from-navy-500/10 to-navy-700/5 border border-navy-700/20 rounded-2xl p-5">
                     <div className="text-3xl mb-2">🎓</div>
                     <h3 className="font-bold mb-2">Анхан шат</h3>
-                    <p className="text-sm text-slate-400">Зах зээл, нэр томьёо, эрсдэлийн менежмент</p>
+                    <p className="text-sm text-navy-500">Зах зээл, нэр томьёо, эрсдэлийн менежмент</p>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-500/10 to-orange-700/5 border border-amber-500/20 rounded-2xl p-5">
+                  <div className="bg-gradient-to-br from-gold-500/10 to-gold-700/5 border border-gold-700/20 rounded-2xl p-5">
                     <div className="text-3xl mb-2">🕯️</div>
                     <h3 className="font-bold mb-2">Дунд шат</h3>
-                    <p className="text-sm text-slate-400">Лаан график паттернууд, price action</p>
+                    <p className="text-sm text-navy-500">Лаан график паттернууд, price action</p>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-500/10 to-cyan-700/5 border border-blue-500/20 rounded-2xl p-5">
+                  <div className="bg-gradient-to-br from-navy-400/10 to-navy-600/5 border border-navy-700/20 rounded-2xl p-5">
                     <div className="text-3xl mb-2">🌊</div>
                     <h3 className="font-bold mb-2">Ахисан шат</h3>
-                    <p className="text-sm text-slate-400">Элиотын давалгаа, Фибоначчи</p>
+                    <p className="text-sm text-navy-500">Элиотын давалгаа, Фибоначчи</p>
                   </div>
                 </div>
 
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6">
+                <div className="bg-gold-700/10 border border-gold-700/30 rounded-2xl p-6">
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="text-amber-400 flex-shrink-0 mt-1" size={24} />
+                    <AlertTriangle className="text-gold-700 flex-shrink-0 mt-1" size={24} />
                     <div>
-                      <h3 className="font-bold text-amber-200 mb-2">Чухал анхааруулга</h3>
-                      <p className="text-sm text-slate-300 leading-relaxed">
+                      <h3 className="font-bold text-gold-700 mb-2">Чухал анхааруулга</h3>
+                      <p className="text-sm text-navy-700 leading-relaxed">
                         Арилжаа нь өндөр эрсдэлтэй үйл ажиллагаа юм. Бодит мөнгөөр арилжаа хийхээсээ өмнө demo дансаар сайн дадлага хийж, зөвхөн алдаж болох мөнгөөрөө л арилжаалаарай.
                       </p>
                     </div>
@@ -1245,7 +1245,7 @@ export default function TradingApp() {
             {view === 'lessons' && (
               <div>
                 <h1 className="text-3xl font-black mb-2">Хичээлүүд</h1>
-                <p className="text-slate-400 mb-6">Дарааллаар нь судлахыг зөвлөж байна</p>
+                <p className="text-navy-500 mb-6">Дарааллаар нь судлахыг зөвлөж байна</p>
                 {Object.entries(lessonsByLevel).map(([level, levelLessons]: [string, any]) => {
                   const levelIcon = level === 'Анхан шат' ? '🎓' : level === 'Дунд шат' ? '🕯️' : '🌊';
                   return (
@@ -1262,20 +1262,20 @@ export default function TradingApp() {
                             <button key={lesson.id}
                               onClick={() => unlocked && startLesson(lesson)}
                               disabled={!unlocked}
-                              className={`bg-slate-800/50 border rounded-2xl p-5 text-left transition-all flex items-center gap-4 ${
-                                unlocked ? 'hover:bg-slate-800 hover:border-emerald-500/50 border-slate-700 cursor-pointer' : 'border-slate-800 opacity-50 cursor-not-allowed'
+                              className={`bg-white shadow-sm border rounded-2xl p-5 text-left transition-all flex items-center gap-4 ${
+                                unlocked ? 'hover:bg-white hover:border-navy-700/50 border-navy-100 cursor-pointer' : 'border-navy-100 opacity-50 cursor-not-allowed'
                               }`}>
                               <div className="text-4xl">{lesson.icon}</div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs text-slate-500">Хичээл {idx + 1}</span>
-                                  {completed && <CheckCircle size={14} className="text-emerald-400" />}
-                                  {!unlocked && <Lock size={14} className="text-slate-500" />}
+                                  <span className="text-xs text-navy-400">Хичээл {idx + 1}</span>
+                                  {completed && <CheckCircle size={14} className="text-navy-700" />}
+                                  {!unlocked && <Lock size={14} className="text-navy-400" />}
                                 </div>
                                 <div className="font-bold text-lg">{lesson.title}</div>
-                                <div className="text-sm text-slate-400">{lesson.steps.length} хэсэг • {lesson.quiz.length} тест</div>
+                                <div className="text-sm text-navy-500">{lesson.steps.length} хэсэг • {lesson.quiz.length} тест</div>
                               </div>
-                              <ChevronRight className="text-slate-500" />
+                              <ChevronRight className="text-navy-400" />
                             </button>
                           );
                         })}
@@ -1289,27 +1289,27 @@ export default function TradingApp() {
             {/* LESSON CONTENT */}
             {view === 'lesson' && currentLesson && (
               <div>
-                <button onClick={() => setView('lessons')} className="flex items-center gap-1 text-slate-400 hover:text-white mb-4 text-sm">
+                <button onClick={() => setView('lessons')} className="flex items-center gap-1 text-navy-500 hover:text-navy-900 mb-4 text-sm">
                   <ChevronLeft size={16} /> Буцах
                 </button>
                 <div className="text-3xl sm:text-4xl mb-2">{currentLesson.icon}</div>
                 <h1 className="text-2xl sm:text-3xl font-black mb-2 break-words">{currentLesson.title}</h1>
                 <div className="flex gap-1 mb-6">
                   {currentLesson.steps.map((_, i) => (
-                    <div key={i} className={`h-1 flex-1 rounded-full ${i <= currentStep ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                    <div key={i} className={`h-1 flex-1 rounded-full ${i <= currentStep ? 'bg-navy-700' : 'bg-navy-50'}`} />
                   ))}
                 </div>
-                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-5 sm:p-6 lg:p-8 mb-6 overflow-hidden">
-                  <h2 className="text-lg sm:text-xl font-bold mb-4 text-emerald-400 break-words">{currentLesson.steps[currentStep].title}</h2>
-                  <div className="text-slate-300 leading-relaxed whitespace-pre-line text-[15px] sm:text-base break-words">{currentLesson.steps[currentStep].content}</div>
+                <div className="bg-white shadow-sm border border-navy-100 rounded-2xl p-5 sm:p-6 lg:p-8 mb-6 overflow-hidden">
+                  <h2 className="text-lg sm:text-xl font-bold mb-4 text-navy-700 break-words">{currentLesson.steps[currentStep].title}</h2>
+                  <div className="text-navy-700 leading-relaxed whitespace-pre-line text-[15px] sm:text-base break-words">{currentLesson.steps[currentStep].content}</div>
                 </div>
                 <div className="flex justify-between gap-2 sm:gap-3">
                   <button onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : setView('lessons')}
-                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-medium text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-white hover:bg-navy-50 rounded-xl font-medium text-sm sm:text-base">
                     ← Өмнөх
                   </button>
                   <button onClick={nextStep}
-                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-medium text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-4 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 rounded-xl font-medium text-sm sm:text-base">
                     {currentStep === currentLesson.steps.length - 1 ? 'Тест өгөх →' : 'Дараах →'}
                   </button>
                 </div>
@@ -1319,25 +1319,25 @@ export default function TradingApp() {
             {/* QUIZ */}
             {view === 'quiz' && currentLesson && (
               <div>
-                <button onClick={() => setView('lesson')} className="flex items-center gap-1 text-slate-400 hover:text-white mb-4 text-sm">
+                <button onClick={() => setView('lesson')} className="flex items-center gap-1 text-navy-500 hover:text-navy-900 mb-4 text-sm">
                   <ChevronLeft size={16} /> Буцах
                 </button>
                 <h1 className="text-3xl font-black mb-2">📝 Тест</h1>
-                <p className="text-slate-400 mb-6">{currentLesson.title}</p>
+                <p className="text-navy-500 mb-6">{currentLesson.title}</p>
                 <div className="space-y-4">
                   {currentLesson.quiz.map((q, qi) => (
-                    <div key={qi} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-5">
+                    <div key={qi} className="bg-white shadow-sm border border-navy-100 rounded-2xl p-5">
                       <div className="font-bold mb-3">{qi + 1}. {q.q}</div>
                       <div className="space-y-2">
                         {q.options.map((opt, oi) => {
                           const selected = quizAnswers[qi] === oi;
                           const isCorrect = oi === q.correct;
-                          let cls = 'border-slate-700 hover:bg-slate-800';
+                          let cls = 'border-navy-100 hover:bg-white';
                           if (quizSubmitted) {
-                            if (isCorrect) cls = 'border-emerald-500 bg-emerald-500/10';
+                            if (isCorrect) cls = 'border-navy-700 bg-navy-700/10';
                             else if (selected) cls = 'border-red-500 bg-red-500/10';
                           } else if (selected) {
-                            cls = 'border-emerald-500 bg-emerald-500/10';
+                            cls = 'border-navy-700 bg-navy-700/10';
                           }
                           return (
                             <button key={oi}
@@ -1356,7 +1356,7 @@ export default function TradingApp() {
                 {!quizSubmitted ? (
                   <button onClick={submitQuiz}
                     disabled={Object.keys(quizAnswers).length < currentLesson.quiz.length}
-                    className="mt-6 w-full py-4 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-bold">
+                    className="mt-6 w-full py-4 bg-navy-700 hover:bg-navy-800 disabled:bg-navy-50 disabled:cursor-not-allowed rounded-xl font-bold">
                     Хариу шалгах
                   </button>
                 ) : (
@@ -1365,19 +1365,19 @@ export default function TradingApp() {
                       const correct = currentLesson.quiz.filter((q, i) => quizAnswers[i] === q.correct).length;
                       const passed = correct / currentLesson.quiz.length >= 0.7;
                       return (
-                        <div className={`p-6 rounded-2xl border text-center ${passed ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                        <div className={`p-6 rounded-2xl border text-center ${passed ? 'bg-navy-700/10 border-navy-700/30' : 'bg-gold-700/10 border-gold-700/30'}`}>
                           <div className="text-5xl mb-2">{passed ? '🎉' : '💪'}</div>
                           <div className="text-2xl font-bold mb-1">{correct}/{currentLesson.quiz.length} зөв</div>
-                          <div className={`text-sm mb-4 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          <div className={`text-sm mb-4 ${passed ? 'text-navy-700' : 'text-gold-700'}`}>
                             {passed ? 'Гайхалтай! Дараагийн хичээл нээгдлээ.' : 'Дахин уншаад туршаад үзээрэй (70%+ хэрэгтэй).'}
                           </div>
                           <div className="flex gap-2 justify-center">
-                            <button onClick={() => setView('lessons')} className="px-5 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl">
+                            <button onClick={() => setView('lessons')} className="px-5 py-2 bg-white hover:bg-navy-50 rounded-xl">
                               Хичээлүүд
                             </button>
                             {!passed && (
                               <button onClick={() => { setQuizAnswers({}); setQuizSubmitted(false); }}
-                                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl text-slate-900 font-bold">
+                                className="px-5 py-2 bg-gold-700 hover:bg-gold-600 rounded-xl text-navy-900 font-bold">
                                 Дахин оролдох
                               </button>
                             )}
@@ -1394,10 +1394,10 @@ export default function TradingApp() {
             {view === 'library' && (
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black mb-2 flex items-center gap-2">
-                  <Library className="text-amber-400" size={28} />
+                  <Library className="text-gold-700" size={28} />
                   Номын сан
                 </h1>
-                <p className="text-slate-400 mb-6 text-sm sm:text-base">Арилжааны сонгодог номнууд монгол хэлээр</p>
+                <p className="text-navy-500 mb-6 text-sm sm:text-base">Арилжааны сонгодог номнууд монгол хэлээр</p>
                 <div className="grid gap-4">
                   {books.map(book => (
                     <button key={book.id} onClick={() => openBook(book)}
@@ -1405,10 +1405,10 @@ export default function TradingApp() {
                       <div className="flex items-start gap-3 sm:gap-4">
                         <div className="text-4xl sm:text-5xl flex-shrink-0">{book.icon}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs text-slate-400 mb-1 truncate">{book.author}</div>
+                          <div className="text-xs text-navy-500 mb-1 truncate">{book.author}</div>
                           <h3 className="text-lg sm:text-xl font-bold mb-2 break-words">{book.title}</h3>
-                          <p className="text-sm text-slate-300 mb-3 break-words">{book.description}</p>
-                          <div className="text-xs text-slate-400 flex items-center flex-wrap gap-2">
+                          <p className="text-sm text-navy-700 mb-3 break-words">{book.description}</p>
+                          <div className="text-xs text-navy-500 flex items-center flex-wrap gap-2">
                             <span>📖 {book.chapters.length} бүлэг</span>
                             <span>•</span>
                             <span>Уншиж эхлэх →</span>
@@ -1424,7 +1424,7 @@ export default function TradingApp() {
             {/* BOOK READER */}
             {view === 'reader' && currentBook && (
               <div>
-                <button onClick={() => setView('library')} className="flex items-center gap-1 text-slate-400 hover:text-white mb-4 text-sm">
+                <button onClick={() => setView('library')} className="flex items-center gap-1 text-navy-500 hover:text-navy-900 mb-4 text-sm">
                   <ChevronLeft size={16} /> Номын сан руу буцах
                 </button>
                 
@@ -1432,7 +1432,7 @@ export default function TradingApp() {
                   <div className="flex items-center gap-3">
                     <div className="text-3xl sm:text-4xl flex-shrink-0">{currentBook.icon}</div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs text-slate-400 truncate">{currentBook.author}</div>
+                      <div className="text-xs text-navy-500 truncate">{currentBook.author}</div>
                       <h2 className="text-base sm:text-xl font-bold break-words">{currentBook.title}</h2>
                     </div>
                   </div>
@@ -1440,11 +1440,11 @@ export default function TradingApp() {
 
                 {/* Chapter selector - dropdown for all sizes (compact + accessible) */}
                 <div className="mb-5">
-                  <label className="block text-xs text-slate-400 mb-2 font-medium">Бүлэг сонгох:</label>
+                  <label className="block text-xs text-navy-500 mb-2 font-medium">Бүлэг сонгох:</label>
                   <select 
                     value={currentChapter} 
                     onChange={e => setCurrentChapter(+e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white font-medium outline-none focus:border-emerald-500 cursor-pointer"
+                    className="w-full px-4 py-3 bg-white border border-navy-100 rounded-xl text-navy-800 font-medium outline-none focus:border-navy-700 cursor-pointer"
                   >
                     {currentBook.chapters.map((ch, i) => (
                       <option key={i} value={i}>
@@ -1456,31 +1456,31 @@ export default function TradingApp() {
 
                 {/* Reading progress */}
                 <div className="mb-5">
-                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex justify-between text-xs text-navy-500 mb-1">
                     <span>Уншилтын явц</span>
                     <span>{currentChapter + 1} / {currentBook.chapters.length}</span>
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all"
+                  <div className="h-2 bg-white rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-navy-700 to-navy-900 transition-all"
                       style={{ width: `${((currentChapter + 1) / currentBook.chapters.length) * 100}%` }} />
                   </div>
                 </div>
 
                 {/* Chapter content */}
-                <article className="bg-slate-800/30 border border-slate-700 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 overflow-hidden">
-                  <div className="text-xs text-emerald-400 mb-2 font-medium">Бүлэг {currentChapter + 1}</div>
-                  <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-black mb-5 sm:mb-6 text-white break-words leading-tight">
+                <article className="bg-white/30 border border-navy-100 rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 overflow-hidden">
+                  <div className="text-xs text-navy-700 mb-2 font-medium">Бүлэг {currentChapter + 1}</div>
+                  <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl font-black mb-5 sm:mb-6 text-navy-800 break-words leading-tight">
                     {currentBook.chapters[currentChapter].title}
                   </h2>
                   
                   {/* Chapter image/diagram */}
                   {currentBook.chapters[currentChapter].image && svgImages[currentBook.chapters[currentChapter].image] && (
-                    <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 mb-5 sm:mb-6 max-w-2xl mx-auto"
+                    <div className="bg-cream-200/50 border border-navy-100/50 rounded-xl p-3 sm:p-4 mb-5 sm:mb-6 max-w-2xl mx-auto"
                       dangerouslySetInnerHTML={{ __html: svgImages[currentBook.chapters[currentChapter].image] }}
                     />
                   )}
                   
-                  <div className="text-slate-300 leading-loose whitespace-pre-line text-[15px] sm:text-base md:text-[17px] lg:text-lg break-words">
+                  <div className="text-navy-700 leading-loose whitespace-pre-line text-[15px] sm:text-base md:text-[17px] lg:text-lg break-words">
                     {currentBook.chapters[currentChapter].content}
                   </div>
                 </article>
@@ -1489,12 +1489,12 @@ export default function TradingApp() {
                 <div className="flex justify-between gap-2 sm:gap-3 mt-6">
                   <button onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
                     disabled={currentChapter === 0}
-                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-white hover:bg-navy-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
                     <ChevronLeft size={18} /> <span className="hidden xs:inline">Өмнөх</span><span className="xs:hidden">Өмнөх</span>
                   </button>
                   <button onClick={() => setCurrentChapter(Math.min(currentBook.chapters.length - 1, currentChapter + 1))}
                     disabled={currentChapter === currentBook.chapters.length - 1}
-                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
+                    className="flex-1 sm:flex-none px-3 sm:px-5 py-3 bg-navy-700 hover:bg-navy-800 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-medium flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base">
                     <span>Дараах</span> <ChevronRight size={18} />
                   </button>
                 </div>
@@ -1505,7 +1505,7 @@ export default function TradingApp() {
             {view === 'calc' && (
               <div>
                 <h1 className="text-3xl font-black mb-2">Тооцоологчид 🧮</h1>
-                <p className="text-slate-400 mb-6">Арилжааны үндсэн тооцооллууд</p>
+                <p className="text-navy-500 mb-6">Арилжааны үндсэн тооцооллууд</p>
                 <div className="grid lg:grid-cols-2 gap-5">
                   <PositionCalc />
                   <RiskRewardCalc />
@@ -1518,20 +1518,20 @@ export default function TradingApp() {
             {view === 'glossary' && (
               <div>
                 <h1 className="text-3xl font-black mb-2">Нэр томъёоны толь 📖</h1>
-                <p className="text-slate-400 mb-4">{glossary.length} нэр томъёо</p>
+                <p className="text-navy-500 mb-4">{glossary.length} нэр томъёо</p>
                 <div className="relative mb-5">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-400" size={18} />
                   <input value={glossarySearch} onChange={e => setGlossarySearch(e.target.value)}
                     placeholder="Нэр томъёо хайх..."
-                    className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500"/>
+                    className="w-full pl-10 pr-4 py-3 bg-white shadow-sm border border-navy-100 rounded-xl text-navy-800 outline-none focus:border-navy-700"/>
                 </div>
                 <div className="grid gap-3">
                   {filteredGlossary.length === 0 ? (
-                    <div className="text-slate-500 text-center py-8">Олдсонгүй</div>
+                    <div className="text-navy-400 text-center py-8">Олдсонгүй</div>
                   ) : filteredGlossary.map((g, i) => (
-                    <div key={i} className="bg-slate-800/50 border border-slate-700 rounded-2xl p-5">
-                      <div className="font-bold text-emerald-400 mb-1">{g.term}</div>
-                      <div className="text-slate-300 text-sm">{g.def}</div>
+                    <div key={i} className="bg-white shadow-sm border border-navy-100 rounded-2xl p-5">
+                      <div className="font-bold text-navy-700 mb-1">{g.term}</div>
+                      <div className="text-navy-700 text-sm">{g.def}</div>
                     </div>
                   ))}
                 </div>
@@ -1542,31 +1542,31 @@ export default function TradingApp() {
             {view === 'progress' && (
               <div>
                 <h1 className="text-3xl font-black mb-2">Миний прогресс 🏆</h1>
-                <p className="text-slate-400 mb-6">Сурах аяллын явц</p>
-                <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-700/10 border border-emerald-500/30 rounded-2xl p-6 mb-5">
-                  <div className="text-sm text-slate-300 mb-2">Нийт прогресс</div>
+                <p className="text-navy-500 mb-6">Сурах аяллын явц</p>
+                <div className="bg-gradient-to-br from-navy-500/20 to-navy-700/10 border border-navy-700/30 rounded-2xl p-6 mb-5">
+                  <div className="text-sm text-navy-700 mb-2">Нийт прогресс</div>
                   <div className="text-4xl font-black mb-3">{Math.round(overallProgress)}%</div>
-                  <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all" style={{ width: `${overallProgress}%` }} />
+                  <div className="h-3 bg-cream-200/60 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-navy-700 to-navy-900 transition-all" style={{ width: `${overallProgress}%` }} />
                   </div>
-                  <div className="mt-3 text-sm text-slate-400">{completedCount} / {lessons.length} хичээл дууссан</div>
+                  <div className="mt-3 text-sm text-navy-500">{completedCount} / {lessons.length} хичээл дууссан</div>
                 </div>
                 <div className="space-y-2">
                   {lessons.map((l, i) => {
                     const p = progress[l.id];
                     return (
-                      <div key={l.id} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex items-center gap-3">
+                      <div key={l.id} className="bg-white shadow-sm border border-navy-100 rounded-xl p-4 flex items-center gap-3">
                         <div className="text-2xl">{l.icon}</div>
                         <div className="flex-1">
-                          <div className="text-xs text-slate-500">{l.level}</div>
+                          <div className="text-xs text-navy-400">{l.level}</div>
                           <div className="font-medium">{l.title}</div>
                           {p?.completed ? (
-                            <div className="text-xs text-emerald-400">✓ Дууссан • {p.score}/{p.total}</div>
+                            <div className="text-xs text-navy-700">✓ Дууссан • {p.score}/{p.total}</div>
                           ) : (
-                            <div className="text-xs text-slate-500">{isLessonUnlocked(i) ? 'Эхлээгүй' : 'Хаалттай'}</div>
+                            <div className="text-xs text-navy-400">{isLessonUnlocked(i) ? 'Эхлээгүй' : 'Хаалттай'}</div>
                           )}
                         </div>
-                        {p?.completed && <Award className="text-emerald-400" size={20} />}
+                        {p?.completed && <Award className="text-navy-700" size={20} />}
                       </div>
                     );
                   })}
