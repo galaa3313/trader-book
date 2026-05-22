@@ -2,10 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BookOpen, Calculator, FileText, CheckCircle, TrendingUp, AlertTriangle,
   ChevronRight, ChevronLeft, Award, Search, Home, Menu, X, Lock, Library,
-  Zap, Activity, Target, Layers, Sparkles, Flame, Bookmark, BarChart3
+  Zap, Activity, Target, Layers, Sparkles, Flame, Bookmark, BarChart3, Shield, LogOut
 } from 'lucide-react';
 import { lessons, books, svgImages, glossary as baseGlossary, cheatsheet } from './data';
 import PdfsView from './PdfsView';
+import { useAuth } from './auth/AuthContext';
+import AdminLogin from './auth/AdminLogin';
+import AdminPanel from './admin/AdminPanel';
 
 type AnyObj = Record<string, any>;
 
@@ -870,6 +873,9 @@ function MarketSessions() {
 }
 
 export default function TradingApp() {
+  const { role, logout } = useAuth();
+  const isAdmin = role === 'admin';
+
   const [view, setView] = useState('home');
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -880,6 +886,30 @@ export default function TradingApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<any>(null);
   const [currentChapter, setCurrentChapter] = useState(0);
+
+  // Admin gate UI state
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+
+  // /#admin URL hash opens login (or panel if already admin)
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash === '#admin') {
+        if (role === 'admin') setAdminOpen(true);
+        else setLoginOpen(true);
+        // clear hash so it doesn't retrigger
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, [role]);
+
+  // When admin just logged in via the modal, jump straight into the panel
+  useEffect(() => {
+    if (role === 'admin' && loginOpen) setLoginOpen(false);
+  }, [role, loginOpen]);
 
   useEffect(() => {
     try {
@@ -1219,8 +1249,36 @@ export default function TradingApp() {
             </div>
           </div>
 
-          <div className="mt-4 text-[10px] text-ink-500 text-center">
-            © Trading 101 Academy
+          {/* Admin / role footer */}
+          <div className="mt-4 space-y-2">
+            {isAdmin ? (
+              <div className="rounded-xl p-3 bg-neon-cyan/10 border border-neon-cyan/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield size={14} className="text-neon-cyan" />
+                  <span className="text-[10px] uppercase tracking-wider text-neon-cyan font-bold">Админ горим</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <button onClick={() => setAdminOpen(true)}
+                    className="flex-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/25">
+                    Самбар
+                  </button>
+                  <button onClick={() => { if (confirm('Гарах уу?')) logout(); }}
+                    title="Гарах"
+                    className="px-2 py-1.5 rounded-lg text-[11px] font-bold bg-ink-800 border border-ink-700 text-ink-300 hover:border-neon-red/40 hover:text-neon-red">
+                    <LogOut size={11} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setLoginOpen(true)}
+                title="Админ нэвтрэх"
+                className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-ink-800/40 border border-ink-700 text-ink-400 hover:border-neon-cyan/40 hover:text-neon-cyan">
+                <Lock size={10} /> Админ нэвтрэх
+              </button>
+            )}
+            <div className="text-[10px] text-ink-500 text-center">
+              © Trading 101 Academy
+            </div>
           </div>
         </aside>
 
@@ -1247,7 +1305,7 @@ export default function TradingApp() {
 
             {view === 'pairs' && <PairsView />}
 
-            {view === 'pdfs' && <PdfsView />}
+            {view === 'pdfs' && <PdfsView onOpenAdmin={() => setAdminOpen(true)} />}
 
             {view === 'lessons' && (
               <div className="animate-fade-in">
@@ -1617,6 +1675,10 @@ export default function TradingApp() {
           </div>
         </main>
       </div>
+
+      {/* Admin login modal + admin panel */}
+      {loginOpen && <AdminLogin onClose={() => setLoginOpen(false)} />}
+      {adminOpen && isAdmin && <AdminPanel onClose={() => setAdminOpen(false)} />}
 
       {/* Bottom nav (mobile) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 glass-strong border-t border-ink-700 pb-safe">

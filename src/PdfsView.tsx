@@ -1,7 +1,9 @@
 import { useMemo, useState, lazy, Suspense } from 'react';
-import { BookOpen, FileText, Clock, Download } from 'lucide-react';
+import { BookOpen, FileText, Clock, Download, Pencil } from 'lucide-react';
 import { BOOKS, BOOK_TOPICS, type BookMeta, type BookLang, type BookDifficulty } from './data/books';
 import { useBookCover } from './useBookCover';
+import { useAuth } from './auth/AuthContext';
+import { useOverrides, applyBookOverride } from './admin/overrides';
 
 const PdfReader = lazy(() => import('./PdfReader'));
 
@@ -60,7 +62,7 @@ function CoverImage({ file, title, accent }: { file: string; title: string; acce
   );
 }
 
-function BookCard({ book, onOpen, progress }: { book: BookMeta; onOpen: (b: BookMeta) => void; progress?: number }) {
+function BookCard({ book, onOpen, onEdit, isAdmin, progress }: { book: BookMeta; onOpen: (b: BookMeta) => void; onEdit?: () => void; isAdmin: boolean; progress?: number }) {
   const acc = ACCENT[book.accentColor || 'cyan'] || ACCENT.cyan;
   const diff = DIFF_META[book.difficulty];
   const lang = LANG_META[book.language];
@@ -130,31 +132,54 @@ function BookCard({ book, onOpen, progress }: { book: BookMeta; onOpen: (b: Book
         >
           <BookOpen size={14} /> Унших
         </button>
-        <a
-          href={url}
-          download={book.file}
-          title="Татаж авах"
-          className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-ink-800 border border-ink-700 hover:border-neon-cyan/40 hover:text-neon-cyan text-ink-300 transition-all"
-        >
-          <Download size={14} />
-        </a>
+        {/* Download — admin only. Guests cannot download/save the PDF file. */}
+        {isAdmin && (
+          <a
+            href={url}
+            download={book.file}
+            title="Татаж авах (зөвхөн админ)"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-ink-800 border border-ink-700 hover:border-neon-cyan/40 hover:text-neon-cyan text-ink-300 transition-all"
+          >
+            <Download size={14} />
+          </a>
+        )}
+        {isAdmin && onEdit && (
+          <button
+            onClick={onEdit}
+            title="Засах"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-neon-amber/15 border border-neon-amber/40 text-neon-amber hover:bg-neon-amber/25 transition-all"
+          >
+            <Pencil size={14} />
+          </button>
+        )}
       </div>
 
-      {book.fileSizeMB && (
+      {/* File size — admin only (users don't need to know the PDF size since they can't download) */}
+      {isAdmin && book.fileSizeMB && (
         <div className="text-[9px] text-ink-500 text-right mt-1.5">{book.fileSizeMB} MB</div>
       )}
     </div>
   );
 }
 
-export default function PdfsView() {
+export default function PdfsView({ onOpenAdmin }: { onOpenAdmin?: () => void } = {}) {
+  const { role } = useAuth();
+  const isAdmin = role === 'admin';
+  const overrides = useOverrides();
+
   const [langFilter, setLangFilter] = useState<LangFilter>('all');
   const [diffFilter, setDiffFilter] = useState<DiffFilter>('all');
   const [search, setSearch] = useState('');
   const [readingBook, setReadingBook] = useState<BookMeta | null>(null);
 
+  // Apply admin overrides (title/desc renames) on top of the static catalog
+  const effectiveBooks = useMemo(
+    () => BOOKS.map(b => applyBookOverride(b, overrides)),
+    [overrides]
+  );
+
   const filtered = useMemo(() => {
-    return BOOKS.filter(b => {
+    return effectiveBooks.filter(b => {
       if (langFilter !== 'all' && b.language !== langFilter) return false;
       if (diffFilter !== 'all' && b.difficulty !== diffFilter) return false;
       if (search) {
@@ -164,7 +189,7 @@ export default function PdfsView() {
       }
       return true;
     });
-  }, [langFilter, diffFilter, search]);
+  }, [effectiveBooks, langFilter, diffFilter, search]);
 
   const langFilters: { id: LangFilter; label: string }[] = [
     { id: 'all', label: `📚 Бүх ном (${BOOKS.length})` },
@@ -184,10 +209,17 @@ export default function PdfsView() {
         <div className="w-11 h-11 rounded-xl bg-neon-violet/15 text-neon-violet flex items-center justify-center">
           <FileText size={22} />
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">PDF Номын Сан</h1>
           <p className="text-xs text-ink-400">{BOOKS.length} ном · Англи + Монгол · Cover-ийг PDF-ээс автоматаар үүсгэв</p>
         </div>
+        {isAdmin && onOpenAdmin && (
+          <button onClick={onOpenAdmin}
+            title="Админ самбар нээх"
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-neon-amber/15 border border-neon-amber/40 text-neon-amber hover:bg-neon-amber/25">
+            <Pencil size={12} /> Засварлах
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -223,7 +255,13 @@ export default function PdfsView() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(book => (
-            <BookCard key={book.id} book={book} onOpen={setReadingBook} />
+            <BookCard
+              key={book.id}
+              book={book}
+              onOpen={setReadingBook}
+              isAdmin={isAdmin}
+              onEdit={isAdmin && onOpenAdmin ? onOpenAdmin : undefined}
+            />
           ))}
         </div>
       )}

@@ -7,6 +7,7 @@ import {
   Bookmark, Loader2, FileText, RotateCw, Sparkles
 } from 'lucide-react';
 import type { BookMeta, BookLang } from './data/books';
+import { useAuth } from './auth/AuthContext';
 
 type Provider = 'google' | 'claude';
 
@@ -33,6 +34,8 @@ const TRANS_KEY = (id: string, page: number, lang: BookLang, provider: Provider)
   `pdftrans:v2:${id}:p${page}:${lang}:${provider}`;
 
 export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: () => void }) {
+  const { role } = useAuth();
+  const isAdmin = role === 'admin';
   const url = `/books/${encodeURIComponent(book.file)}`;
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNum, setPageNum] = useState<number>(() => {
@@ -161,6 +164,14 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
   // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Block download/save/print/select-all shortcuts for non-admin readers
+      if (!isAdmin && (e.ctrlKey || e.metaKey)) {
+        const k = e.key.toLowerCase();
+        if (k === 's' || k === 'p' || k === 'a' || k === 'c' || k === 'u') {
+          e.preventDefault();
+          return;
+        }
+      }
       if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
       if (e.key === 'Escape') onClose();
       else if (e.key === 'ArrowRight' || e.key === ' ') setPageNum(p => Math.min(numPages || 1, p + 1));
@@ -177,7 +188,15 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
-  }, [numPages, onClose, toggleBookmark, book.language, otherLang]);
+  }, [numPages, onClose, toggleBookmark, book.language, otherLang, isAdmin]);
+
+  // Block right-click context menu and drag for non-admin readers
+  const blockContextMenu = !isAdmin
+    ? (e: React.MouseEvent) => { e.preventDefault(); }
+    : undefined;
+  const blockDrag = !isAdmin
+    ? (e: React.DragEvent) => { e.preventDefault(); }
+    : undefined;
 
   const progressPct = numPages ? (pageNum / numPages) * 100 : 0;
   const isBookmarked = bookmarks.has(pageNum);
@@ -189,7 +208,11 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
   }), [showTranslation]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink-950 flex flex-col">
+    <div
+      className={`fixed inset-0 z-50 bg-ink-950 flex flex-col ${!isAdmin ? 'pdf-protected' : ''}`}
+      onContextMenu={blockContextMenu}
+      onDragStart={blockDrag}
+    >
       {/* Header */}
       <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-b border-ink-700 bg-ink-900/70 backdrop-blur">
         <button onClick={onClose} title="Хаах (Esc)"
@@ -254,10 +277,13 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
             <FileText size={32} className="mx-auto mb-3 text-neon-red" />
             <div className="font-bold text-white mb-1">PDF ачаалж чадсангүй</div>
             <div className="text-xs text-ink-400">{docError}</div>
-            <a href={url} target="_blank" rel="noopener noreferrer"
-              className="inline-block mt-4 px-4 py-2 bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan rounded-lg text-xs font-bold">
-              Шинэ tab-д нээх
-            </a>
+            {/* "Open in new tab" exposes the file URL — admin only */}
+            {isAdmin && (
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className="inline-block mt-4 px-4 py-2 bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan rounded-lg text-xs font-bold">
+                Шинэ tab-д нээх
+              </a>
+            )}
           </div>
         ) : (
           <Document

@@ -88,3 +88,22 @@ html { scroll-behavior: smooth; }
 /* Hide horizontal scrollbar for session strip */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* PDF copy/download protection (applied for non-admin readers) */
+.pdf-protected,
+.pdf-protected * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+.pdf-protected img,
+.pdf-protected canvas {
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+
+/* Fade-in helper used by login modal */
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+.animate-fade-in { animation: fade-in 0.18s ease-out; }
