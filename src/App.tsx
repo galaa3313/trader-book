@@ -118,8 +118,23 @@ function fmtDur(mins: number) {
   return h === 0 ? `${m}м` : m === 0 ? `${h}ц` : `${h}ц ${m}м`;
 }
 
-// ============ ALL FX PAIRS ============
-type Pair = { sym: string; base: string; quote: string; group: 'major' | 'minor' | 'exotic' };
+// ============ ALL ASSETS (FX + Metals + Indices + Crypto) ============
+type AssetGroup = 'major' | 'minor' | 'exotic' | 'metal' | 'index' | 'crypto';
+type AssetSource =
+  | { kind: 'forex'; base: string; quote: string }
+  | { kind: 'crypto'; cgId: string }
+  | { kind: 'yahoo'; yahooSym: string };
+
+type Asset = {
+  sym: string;
+  group: AssetGroup;
+  source: AssetSource;
+  pipSize: number;       // 1 pip/point in price units
+  contractSize: number;  // units per 1 lot (forex 100000, gold 100, silver 5000, index/crypto 1)
+  priceDigits: number;   // decimals for display
+  icon?: string;         // emoji for non-forex
+  label?: string;        // long name for non-forex
+};
 
 const FLAGS: Record<string, string> = {
   USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', CHF: '🇨🇭', CAD: '🇨🇦',
@@ -128,113 +143,201 @@ const FLAGS: Record<string, string> = {
   KRW: '🇰🇷', INR: '🇮🇳', BRL: '🇧🇷', HUF: '🇭🇺', CZK: '🇨🇿', ILS: '🇮🇱',
 };
 
-const PAIRS: Pair[] = [
+const ASSETS: Asset[] = [
   // Majors (7)
-  { sym: 'EUR/USD', base: 'EUR', quote: 'USD', group: 'major' },
-  { sym: 'GBP/USD', base: 'GBP', quote: 'USD', group: 'major' },
-  { sym: 'USD/JPY', base: 'USD', quote: 'JPY', group: 'major' },
-  { sym: 'USD/CHF', base: 'USD', quote: 'CHF', group: 'major' },
-  { sym: 'USD/CAD', base: 'USD', quote: 'CAD', group: 'major' },
-  { sym: 'AUD/USD', base: 'AUD', quote: 'USD', group: 'major' },
-  { sym: 'NZD/USD', base: 'NZD', quote: 'USD', group: 'major' },
+  { sym: 'EUR/USD', group: 'major', source: { kind: 'forex', base: 'EUR', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'GBP/USD', group: 'major', source: { kind: 'forex', base: 'GBP', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/JPY', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'USD/CHF', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/CAD', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'AUD/USD', group: 'major', source: { kind: 'forex', base: 'AUD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'NZD/USD', group: 'major', source: { kind: 'forex', base: 'NZD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
   // Minors / Crosses (16)
-  { sym: 'EUR/GBP', base: 'EUR', quote: 'GBP', group: 'minor' },
-  { sym: 'EUR/JPY', base: 'EUR', quote: 'JPY', group: 'minor' },
-  { sym: 'EUR/CHF', base: 'EUR', quote: 'CHF', group: 'minor' },
-  { sym: 'EUR/AUD', base: 'EUR', quote: 'AUD', group: 'minor' },
-  { sym: 'EUR/CAD', base: 'EUR', quote: 'CAD', group: 'minor' },
-  { sym: 'EUR/NZD', base: 'EUR', quote: 'NZD', group: 'minor' },
-  { sym: 'GBP/JPY', base: 'GBP', quote: 'JPY', group: 'minor' },
-  { sym: 'GBP/CHF', base: 'GBP', quote: 'CHF', group: 'minor' },
-  { sym: 'GBP/AUD', base: 'GBP', quote: 'AUD', group: 'minor' },
-  { sym: 'GBP/CAD', base: 'GBP', quote: 'CAD', group: 'minor' },
-  { sym: 'AUD/JPY', base: 'AUD', quote: 'JPY', group: 'minor' },
-  { sym: 'AUD/CHF', base: 'AUD', quote: 'CHF', group: 'minor' },
-  { sym: 'AUD/NZD', base: 'AUD', quote: 'NZD', group: 'minor' },
-  { sym: 'NZD/JPY', base: 'NZD', quote: 'JPY', group: 'minor' },
-  { sym: 'CAD/JPY', base: 'CAD', quote: 'JPY', group: 'minor' },
-  { sym: 'CHF/JPY', base: 'CHF', quote: 'JPY', group: 'minor' },
+  { sym: 'EUR/GBP', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'GBP' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'EUR/JPY', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'EUR/CHF', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'EUR/AUD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'EUR/CAD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'EUR/NZD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'GBP/JPY', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'GBP/CHF', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'GBP/AUD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'GBP/CAD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'AUD/JPY', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'AUD/CHF', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'AUD/NZD', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'NZD/JPY', group: 'minor', source: { kind: 'forex', base: 'NZD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'CAD/JPY', group: 'minor', source: { kind: 'forex', base: 'CAD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'CHF/JPY', group: 'minor', source: { kind: 'forex', base: 'CHF', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
   // Exotics (9)
-  { sym: 'USD/CNY', base: 'USD', quote: 'CNY', group: 'exotic' },
-  { sym: 'USD/MXN', base: 'USD', quote: 'MXN', group: 'exotic' },
-  { sym: 'USD/ZAR', base: 'USD', quote: 'ZAR', group: 'exotic' },
-  { sym: 'USD/SEK', base: 'USD', quote: 'SEK', group: 'exotic' },
-  { sym: 'USD/NOK', base: 'USD', quote: 'NOK', group: 'exotic' },
-  { sym: 'USD/SGD', base: 'USD', quote: 'SGD', group: 'exotic' },
-  { sym: 'USD/HKD', base: 'USD', quote: 'HKD', group: 'exotic' },
-  { sym: 'USD/TRY', base: 'USD', quote: 'TRY', group: 'exotic' },
-  { sym: 'USD/PLN', base: 'USD', quote: 'PLN', group: 'exotic' },
+  { sym: 'USD/CNY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'CNY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/MXN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'MXN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/ZAR', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'ZAR' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/SEK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SEK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/NOK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'NOK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/SGD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SGD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/HKD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'HKD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/TRY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'TRY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/PLN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'PLN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  // Metals
+  { sym: 'XAU/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'GC=F' }, pipSize: 0.01,  contractSize: 100,  priceDigits: 2, icon: '🥇', label: 'Gold (Алт)' },
+  { sym: 'XAG/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'SI=F' }, pipSize: 0.001, contractSize: 5000, priceDigits: 3, icon: '🥈', label: 'Silver (Мөнгө)' },
+  { sym: 'XPT/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'PL=F' }, pipSize: 0.01,  contractSize: 50,   priceDigits: 2, icon: '⚪', label: 'Platinum (Цагаан алт)' },
+  // Indices
+  { sym: 'SPX500', group: 'index', source: { kind: 'yahoo', yahooSym: '^GSPC' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'S&P 500' },
+  { sym: 'NAS100', group: 'index', source: { kind: 'yahoo', yahooSym: '^NDX' },   pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'NASDAQ 100' },
+  { sym: 'US30',   group: 'index', source: { kind: 'yahoo', yahooSym: '^DJI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇺🇸', label: 'Dow Jones' },
+  { sym: 'GER40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^GDAXI' }, pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇩🇪', label: 'DAX 40' },
+  { sym: 'UK100',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FTSE' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇬🇧', label: 'FTSE 100' },
+  { sym: 'JP225',  group: 'index', source: { kind: 'yahoo', yahooSym: '^N225' },  pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇯🇵', label: 'Nikkei 225' },
+  { sym: 'HK50',   group: 'index', source: { kind: 'yahoo', yahooSym: '^HSI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇭🇰', label: 'Hang Seng' },
+  { sym: 'FRA40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FCHI' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇫🇷', label: 'CAC 40' },
+  // Crypto
+  { sym: 'BTC/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'bitcoin' },     pipSize: 1,    contractSize: 1, priceDigits: 0, icon: '₿',  label: 'Bitcoin' },
+  { sym: 'ETH/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ethereum' },    pipSize: 0.1,  contractSize: 1, priceDigits: 2, icon: '⟠',  label: 'Ethereum' },
+  { sym: 'SOL/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'solana' },      pipSize: 0.01, contractSize: 1, priceDigits: 2, icon: '◎',  label: 'Solana' },
+  { sym: 'BNB/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'binancecoin' }, pipSize: 0.01, contractSize: 1, priceDigits: 2, icon: '🟡', label: 'BNB' },
+  { sym: 'XRP/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ripple' },      pipSize: 0.0001, contractSize: 1, priceDigits: 4, icon: '✕', label: 'XRP' },
+  { sym: 'DOGE/USD',group: 'crypto', source: { kind: 'crypto', cgId: 'dogecoin' },    pipSize: 0.0001, contractSize: 1, priceDigits: 5, icon: '🐕', label: 'Dogecoin' },
 ];
 
-function useAllRates() {
-  const [data, setData] = useState<{ now: Record<string, number>; prev: Record<string, number> } | null>(null);
+type FxRates = { now: Record<string, number>; prev: Record<string, number> } | null;
+type ExtPrice = { current: number; prev: number };
+type ExtPrices = Record<string, ExtPrice>;
+
+function useAllAssets() {
+  const [fx, setFx] = useState<FxRates>(null);
+  const [ext, setExt] = useState<ExtPrices>({});
   const [live, setLive] = useState(false);
   const [updated, setUpdated] = useState<Date | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+
     const load = async () => {
-      try {
-        const [nowR, prevR] = await Promise.all([
-          fetch('https://api.frankfurter.app/latest?from=USD'),
-          fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`),
-        ]);
-        const nowJ = await nowR.json();
-        const prevJ = await prevR.json();
-        if (cancelled) return;
-        setData({
-          now: { USD: 1, ...nowJ.rates },
-          prev: { USD: 1, ...prevJ.rates },
+      // 1. Forex
+      const fxP = Promise.all([
+        fetch('https://api.frankfurter.app/latest?from=USD').then(r => r.json()),
+        fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`).then(r => r.json()),
+      ]).then(([n, p]) => ({ now: { USD: 1, ...n.rates }, prev: { USD: 1, ...p.rates } }))
+        .catch(() => null);
+
+      // 2. Crypto via CoinGecko
+      const cryptoIds = ASSETS.filter(a => a.source.kind === 'crypto').map(a => (a.source as any).cgId).join(',');
+      const cryptoP = fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`)
+        .then(r => r.json()).catch(() => null);
+
+      // 3. Yahoo (metals + indices) via our /api/quotes proxy
+      const yahooSyms = ASSETS.filter(a => a.source.kind === 'yahoo').map(a => (a.source as any).yahooSym).join(',');
+      const yahooP = fetch(`/api/quotes?symbols=${encodeURIComponent(yahooSyms)}`)
+        .then(r => r.json()).catch(() => null);
+
+      const [fxData, cryptoData, yahooData] = await Promise.all([fxP, cryptoP, yahooP]);
+      if (cancelled) return;
+
+      if (fxData) setFx(fxData);
+
+      const newExt: ExtPrices = {};
+      if (cryptoData) {
+        ASSETS.forEach(a => {
+          if (a.source.kind !== 'crypto') return;
+          const id = a.source.cgId;
+          const d = cryptoData[id];
+          if (!d) return;
+          const cur = d.usd;
+          const ch = d.usd_24h_change || 0;
+          const prev = cur / (1 + ch / 100);
+          newExt[a.sym] = { current: cur, prev };
         });
-        setLive(true);
-        setUpdated(new Date());
-      } catch (e) {}
+      }
+      if (Array.isArray(yahooData)) {
+        const map: Record<string, any> = {};
+        yahooData.forEach((q: any) => { if (q && q.sym) map[q.sym] = q; });
+        ASSETS.forEach(a => {
+          if (a.source.kind !== 'yahoo') return;
+          const q = map[a.source.yahooSym];
+          if (!q || q.error || q.price == null) return;
+          newExt[a.sym] = { current: q.price, prev: q.prevClose ?? q.price };
+        });
+      }
+      setExt(newExt);
+      setLive(true);
+      setUpdated(new Date());
     };
+
     load();
     const id = setInterval(load, 120000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
-  return { data, live, updated };
+
+  return { fx, ext, live, updated };
 }
 
-function pipSize(quote: string) { return quote === 'JPY' ? 0.01 : 0.0001; }
+function computeAsset(a: Asset, fx: FxRates, ext: ExtPrices, lot: number) {
+  let current: number | undefined;
+  let prev: number | undefined;
+  if (a.source.kind === 'forex') {
+    if (!fx) return null;
+    const b = a.source.base, q = a.source.quote;
+    if (!fx.now[b] || !fx.now[q] || !fx.prev[b] || !fx.prev[q]) return null;
+    current = fx.now[q] / fx.now[b];
+    prev = fx.prev[q] / fx.prev[b];
+  } else {
+    const p = ext[a.sym];
+    if (!p) return null;
+    current = p.current;
+    prev = p.prev;
+  }
+  if (current == null || prev == null) return null;
 
-function computePair(p: Pair, rates: { now: any; prev: any }, lot: number) {
-  const now = rates.now;
-  const prev = rates.prev;
-  if (!now[p.base] || !now[p.quote] || !prev[p.base] || !prev[p.quote]) return null;
-  const price = now[p.quote] / now[p.base];
-  const prevPrice = prev[p.quote] / prev[p.base];
-  const ps = pipSize(p.quote);
-  const pipsDelta = (price - prevPrice) / ps;
-  // pip value in USD per lot
-  const pipUSD = (lot * 100000 * ps) / (p.quote === 'USD' ? 1 : now[p.quote]);
+  const pipsDelta = (current - prev) / a.pipSize;
+  let pipUSD: number;
+  if (a.source.kind === 'forex') {
+    const q = a.source.quote;
+    pipUSD = (lot * a.contractSize * a.pipSize) / (q === 'USD' ? 1 : (fx as any).now[q]);
+  } else {
+    pipUSD = lot * a.contractSize * a.pipSize;
+  }
   const dollarChange = pipsDelta * pipUSD;
-  const priceDigits = p.quote === 'JPY' ? 3 : 5;
-  return { ...p, price, prevPrice, pipsDelta, pipUSD, dollarChange, priceDigits };
+  return { ...a, price: current, prevPrice: prev, pipsDelta, pipUSD, dollarChange };
+}
+
+function assetIcon(a: Asset) {
+  if (a.source.kind === 'forex') {
+    return `${FLAGS[a.source.base] || '🏳️'}${FLAGS[a.source.quote] || '🏳️'}`;
+  }
+  return a.icon || '◆';
 }
 
 function PairsView() {
-  const { data, live, updated } = useAllRates();
+  const { fx, ext, live, updated } = useAllAssets();
   const [lot, setLot] = useState(0.1);
-  const [filter, setFilter] = useState<'all' | 'major' | 'minor' | 'exotic'>('all');
+  const [filter, setFilter] = useState<'all' | AssetGroup>('all');
   const [search, setSearch] = useState('');
 
   const rows = useMemo(() => {
-    if (!data) return [];
-    return PAIRS
-      .filter(p => filter === 'all' || p.group === filter)
-      .filter(p => p.sym.toLowerCase().includes(search.toLowerCase()))
-      .map(p => computePair(p, data, lot))
+    return ASSETS
+      .filter(a => filter === 'all' || a.group === filter)
+      .filter(a => {
+        if (!search) return true;
+        const s = search.toLowerCase();
+        return a.sym.toLowerCase().includes(s) || (a.label || '').toLowerCase().includes(s);
+      })
+      .map(a => computeAsset(a, fx, ext, lot))
       .filter(Boolean) as any[];
-  }, [data, lot, filter, search]);
+  }, [fx, ext, lot, filter, search]);
 
+  const dataReady = !!fx;
   const lotPresets = [0.01, 0.1, 0.5, 1, 5, 10];
   const filters: any[] = [
-    { id: 'all', label: 'Бүх хослол', count: PAIRS.length, color: 'cyan' },
-    { id: 'major', label: 'Major', count: PAIRS.filter(p => p.group === 'major').length, color: 'green' },
-    { id: 'minor', label: 'Minor', count: PAIRS.filter(p => p.group === 'minor').length, color: 'violet' },
-    { id: 'exotic', label: 'Exotic', count: PAIRS.filter(p => p.group === 'exotic').length, color: 'amber' },
+    { id: 'all',    label: '📊 Бүх хөрөнгө',    count: ASSETS.length,                            color: 'cyan'   },
+    { id: 'major',  label: '💱 Major (Гол валют)', count: ASSETS.filter(a => a.group === 'major').length,  color: 'green'  },
+    { id: 'minor',  label: '↔️ Minor (Cross)',    count: ASSETS.filter(a => a.group === 'minor').length,  color: 'violet' },
+    { id: 'exotic', label: '🌐 Exotic',           count: ASSETS.filter(a => a.group === 'exotic').length, color: 'amber'  },
+    { id: 'metal',  label: '🥇 Metals (Алт/Мөнгө)', count: ASSETS.filter(a => a.group === 'metal').length, color: 'amber'  },
+    { id: 'index',  label: '📈 Indices (Индекс)',  count: ASSETS.filter(a => a.group === 'index').length, color: 'violet' },
+    { id: 'crypto', label: '₿ Crypto',            count: ASSETS.filter(a => a.group === 'crypto').length, color: 'cyan'   },
   ];
   const currentFilter = filters.find(f => f.id === filter)!;
 
@@ -258,8 +361,8 @@ function PairsView() {
             <Activity size={22} />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">Live хослолууд</h1>
-            <p className="text-xs text-ink-400">{PAIRS.length} pair · ECB бодит ханш · pip-ийн live үнэ</p>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">Live хөрөнгүүд</h1>
+            <p className="text-xs text-ink-400">{ASSETS.length} актив · Forex · Metals · Indices · Crypto · pip-ийн live үнэ</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2">
@@ -373,7 +476,7 @@ function PairsView() {
       </div>
 
       {/* Rows */}
-      {!data ? (
+      {!dataReady ? (
         <div className="text-center py-12 text-ink-400">⏳ Зах зээлийн ханш татаж байна...</div>
       ) : rows.length === 0 ? (
         <div className="text-center py-12 text-ink-400">Олдсонгүй</div>
@@ -384,10 +487,10 @@ function PairsView() {
             return (
               <div key={r.sym} className={`glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
-                  <span className="text-lg leading-none">{FLAGS[r.base]}{FLAGS[r.quote]}</span>
+                  <span className="text-lg leading-none">{assetIcon(r)}</span>
                   <div>
                     <div className="font-mono font-bold text-white text-sm">{r.sym}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-ink-400">{r.group}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-ink-400">{r.label || r.group}</div>
                   </div>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
@@ -416,12 +519,18 @@ function PairsView() {
         </div>
       )}
 
-      <div className="mt-6 p-4 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400">
+      <div className="mt-6 p-4 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400 space-y-1">
         <div className="font-bold text-ink-200 mb-1">💡 Тайлбар</div>
-        <div>• <span className="text-neon-cyan">$/pip</span> — Сонгосон lot-д таны 1 pip-ийн үнэ</div>
-        <div>• <span className="text-neon-green">Pips (24ц)</span> — Сүүлийн business day-аас одоо хүртэлх pip-ийн зөрүү</div>
-        <div>• <span className="text-neon-amber">USD өөрчлөлт</span> — Хэрэв та 24 цагийн өмнө нээсэн бол одоо хэдэн доллар үлдэх вэ</div>
-        <div className="mt-1">• Ханшийн эх сурвалж: Frankfurter / ECB (албан ёсны). 2 минут тутамд шинэчилнэ.</div>
+        <div>• <span className="text-neon-cyan">$/pip</span> — Сонгосон lot-д таны 1 pip / point-ын $ үнэ</div>
+        <div>• <span className="text-neon-green">Pips (24ц)</span> — Сүүлийн өдрөөс одоо хүртэлх pip-ийн зөрүү</div>
+        <div>• <span className="text-neon-amber">USD өөрчлөлт</span> — Хэрэв та 24 цагийн өмнө нээсэн бол одоо хэдэн доллар</div>
+        <div className="mt-2 pt-2 border-t border-ink-700/60 text-[11px]">
+          <div className="font-bold text-ink-300 mb-0.5">📡 Live эх сурвалж</div>
+          <div>• Forex (33 хослол): Frankfurter / ECB</div>
+          <div>• Metals + Indices (10): Yahoo Finance via /api/quotes</div>
+          <div>• Crypto (6): CoinGecko + 24ц өөрчлөлт</div>
+          <div>• 2 минут тутамд автомат шинэчлэгдэнэ</div>
+        </div>
       </div>
     </div>
   );
