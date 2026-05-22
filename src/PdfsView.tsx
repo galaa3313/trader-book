@@ -232,8 +232,10 @@ export default function PdfsView() {
         <div className="font-bold text-ink-200 mb-1">💡 Тайлбар</div>
         <div>• Cover автомат үүсгэгдэнэ — PDF-ийн 1-р хуудаснаас (pdf.js), эхний удаа удаан, дараа localStorage cache</div>
         <div>• "Унших" товч → дотоод PDF reader нээнэ (шинэ tab биш)</div>
-        <div>• Reader дотор 🇬🇧 EN / 🇲🇳 MN <strong>хэлний toggle</strong> — өөр хэл сонгоход AI орчуулна (Claude Sonnet 4.6)</div>
-        <div>• Орчуулга хуудас тус бүрд хийгдэж <strong>localStorage cache</strong> хийгдэнэ</div>
+        <div>• Reader дотор 🇬🇧 EN / 🇲🇳 MN <strong>хэлний toggle</strong> — өөр хэл сонгоход автомат орчуулга</div>
+        <div className="ml-3">↳ <span className="text-neon-cyan">🌐 Google</span> — Default, ҮНЭГҮЙ, хурдан (~1-3 сек), чанар дунд зэрэг</div>
+        <div className="ml-3">↳ <span className="text-neon-green">✨ Claude</span> — "Чанартай" товчоор шилжих, ~$0.01-0.02/хуудас, форекс нэр томьёог зөв буулгана</div>
+        <div>• Хуудас тус бүрийн орчуулга <strong>localStorage cache</strong>-д хадгалагдана — дахин үнэгүй</div>
         <div>• Keyboard: <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">←→</kbd> хуудас · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">L</kbd> хэл · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">B</kbd> хавчуурга · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">F</kbd> бүтэн дэлгэц</div>
       </div>
 

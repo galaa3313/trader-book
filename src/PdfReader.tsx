@@ -4,9 +4,11 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import {
   X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2,
-  Bookmark, Languages, Loader2, FileText, RotateCw
+  Bookmark, Loader2, FileText, RotateCw, Sparkles
 } from 'lucide-react';
 import type { BookMeta, BookLang } from './data/books';
+
+type Provider = 'google' | 'claude';
 
 // Worker setup — try bundled, fall back to CDN
 try {
@@ -26,8 +28,9 @@ type TranslationState = 'idle' | 'loading' | 'ok' | 'error' | 'empty';
 
 const PROGRESS_KEY = (id: string) => `pdfprogress:${id}`;
 const PREF_LANG_KEY = 'pdfreader:preferredLang';
-const TRANS_KEY = (id: string, page: number, lang: BookLang) =>
-  `pdftrans:v1:${id}:p${page}:${lang}`;
+const PREF_PROVIDER_KEY = 'pdfreader:preferredProvider';
+const TRANS_KEY = (id: string, page: number, lang: BookLang, provider: Provider) =>
+  `pdftrans:v2:${id}:p${page}:${lang}:${provider}`;
 
 export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: () => void }) {
   const url = `/books/${encodeURIComponent(book.file)}`;
@@ -48,6 +51,15 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
     } catch { return book.language; }
   });
   useEffect(() => { try { localStorage.setItem(PREF_LANG_KEY, activeLang); } catch {} }, [activeLang]);
+
+  // Translation provider: google (free, default) | claude (premium)
+  const [provider, setProvider] = useState<Provider>(() => {
+    try {
+      const saved = localStorage.getItem(PREF_PROVIDER_KEY) as Provider | null;
+      return saved === 'claude' || saved === 'google' ? saved : 'google';
+    } catch { return 'google'; }
+  });
+  useEffect(() => { try { localStorage.setItem(PREF_PROVIDER_KEY, provider); } catch {} }, [provider]);
 
   // Translation state for current page
   const [transStatus, setTransStatus] = useState<TranslationState>('idle');
@@ -83,12 +95,13 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
   // Extract text + translate when activeLang != book.language
   const showTranslation = activeLang !== book.language;
 
-  const extractAndTranslate = useCallback(async () => {
+  const extractAndTranslate = useCallback(async (forceProvider?: Provider) => {
     if (!showTranslation || !pdfDocRef.current) { setTransStatus('idle'); return; }
+    const usedProvider = forceProvider || provider;
 
-    // 1. Check localStorage cache
+    // 1. Check localStorage cache for this provider
     try {
-      const cached = localStorage.getItem(TRANS_KEY(book.id, pageNum, activeLang));
+      const cached = localStorage.getItem(TRANS_KEY(book.id, pageNum, activeLang, usedProvider));
       if (cached) {
         setTransText(cached);
         setTransStatus('ok');
@@ -111,7 +124,7 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
         return;
       }
 
-      // 3. Send to /api/translate
+      // 3. Send to /api/translate with chosen provider
       const r = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,6 +133,7 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
           fromLang: book.language,
           toLang: activeLang,
           bookTitle: book.titleEn,
+          provider: usedProvider,
         }),
       });
       const data = await r.json();
@@ -128,15 +142,21 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
 
       setTransText(data.translation);
       setTransStatus('ok');
-      try { localStorage.setItem(TRANS_KEY(book.id, pageNum, activeLang), data.translation); } catch {}
+      try { localStorage.setItem(TRANS_KEY(book.id, pageNum, activeLang, usedProvider), data.translation); } catch {}
     } catch (e: any) {
       console.error('Translation failed', e);
       setTransError(String(e.message || e));
       setTransStatus('error');
     }
-  }, [showTranslation, book, pageNum, activeLang]);
+  }, [showTranslation, book, pageNum, activeLang, provider]);
 
   useEffect(() => { extractAndTranslate(); }, [extractAndTranslate]);
+
+  // Upgrade current page to Claude translation
+  const upgradeToClaude = useCallback(() => {
+    setProvider('claude');
+    // useEffect will re-run extractAndTranslate with new provider
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -255,27 +275,61 @@ export default function PdfReader({ book, onClose }: { book: BookMeta; onClose: 
             {showTranslation ? (
               <div className="max-w-3xl mx-auto bg-ink-950 rounded-xl border border-ink-700 p-6 sm:p-10"
                 style={{ fontSize: `${fontSize}px`, lineHeight: 1.75 }}>
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-ink-700">
-                  <span className="px-2 py-0.5 bg-neon-green/15 text-neon-green text-[10px] font-bold rounded">🤖 AI орчуулсан</span>
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-ink-700 flex-wrap">
+                  {provider === 'google' ? (
+                    <span className="px-2 py-0.5 bg-neon-cyan/15 text-neon-cyan text-[10px] font-bold rounded inline-flex items-center gap-1">
+                      🌐 Google орчуулсан · ҮНЭГҮЙ
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-neon-green/20 to-neon-violet/20 text-neon-green text-[10px] font-bold rounded inline-flex items-center gap-1 border border-neon-green/40">
+                      ✨ Claude орчуулсан · ЧАНАРТАЙ
+                    </span>
+                  )}
                   <span className="text-[10px] text-ink-400">Хуудас {pageNum} · {activeLang === 'en' ? 'English' : 'Монгол'}</span>
-                  <button onClick={() => { try { localStorage.removeItem(TRANS_KEY(book.id, pageNum, activeLang)); } catch {}; extractAndTranslate(); }}
-                    title="Дахин орчуулах"
+                  <button onClick={() => { try { localStorage.removeItem(TRANS_KEY(book.id, pageNum, activeLang, provider)); } catch {}; extractAndTranslate(); }}
+                    title="Энэ хуудсыг дахин орчуулах"
                     className="ml-auto text-[10px] text-ink-400 hover:text-neon-cyan">↻ дахин</button>
+
+                  {provider === 'google' && transStatus === 'ok' && (
+                    <button onClick={upgradeToClaude}
+                      title="Энэ хуудсыг Claude-аар чанартай орчуулах"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-gradient-to-r from-neon-green/15 to-neon-violet/15 border border-neon-green/40 text-neon-green hover:from-neon-green/25 hover:to-neon-violet/25">
+                      <Sparkles size={10} /> Чанартай (Claude)
+                    </button>
+                  )}
+                  {provider === 'claude' && (
+                    <button onClick={() => setProvider('google')}
+                      title="Үнэгүй Google руу буцах"
+                      className="text-[10px] text-ink-400 hover:text-neon-cyan">🌐 Google руу</button>
+                  )}
                 </div>
 
                 {transStatus === 'loading' && (
                   <div className="py-12 text-center text-ink-300">
                     <Loader2 size={28} className="mx-auto mb-3 animate-spin text-neon-cyan" />
-                    <div className="text-sm">Орчуулж байна... <span className="text-ink-500">(анх удаа ~10-30 секунд)</span></div>
-                    <div className="text-[10px] text-ink-500 mt-1">Claude {''}<code>claude-sonnet-4-6</code></div>
+                    <div className="text-sm">
+                      {provider === 'claude' ? 'Claude орчуулж байна...' : 'Google орчуулж байна...'}
+                      <span className="text-ink-500 ml-1">
+                        {provider === 'claude' ? '(~10-30 сек)' : '(~1-3 сек)'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-ink-500 mt-1">
+                      {provider === 'claude' ? <>Claude <code>sonnet-4-6</code></> : 'translate.googleapis.com'}
+                    </div>
                   </div>
                 )}
                 {transStatus === 'error' && (
                   <div className="py-8 text-center">
-                    <div className="text-neon-red font-bold mb-2">⚠ Орчуулга амжилтгүй</div>
-                    <div className="text-xs text-ink-400 mb-3">{transError}</div>
-                    <button onClick={extractAndTranslate}
-                      className="px-3 py-1.5 bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan rounded text-xs font-bold">↻ Дахин оролдох</button>
+                    <div className="text-neon-red font-bold mb-2">⚠ {provider === 'claude' ? 'Claude' : 'Google'} орчуулга амжилтгүй</div>
+                    <div className="text-xs text-ink-400 mb-3 break-words max-w-md mx-auto">{transError}</div>
+                    <div className="flex gap-2 justify-center">
+                      <button onClick={() => extractAndTranslate()}
+                        className="px-3 py-1.5 bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan rounded text-xs font-bold">↻ Дахин оролдох</button>
+                      {provider === 'claude' && (
+                        <button onClick={() => setProvider('google')}
+                          className="px-3 py-1.5 bg-ink-800 border border-ink-700 text-ink-200 rounded text-xs font-bold">🌐 Google ашиглах</button>
+                      )}
+                    </div>
                   </div>
                 )}
                 {transStatus === 'empty' && (

@@ -1,11 +1,12 @@
-// Vercel serverless function: translates forex/trading text via Claude API.
-// Uses prompt caching on the system prompt so subsequent calls are ~75% cheaper.
+// Vercel serverless function: translates forex/trading text.
+//
+// Two providers (Hybrid):
+//   - "google" (default, FREE)   — unofficial translate.googleapis.com endpoint
+//   - "claude" (premium, paid)   — Anthropic Claude Sonnet 4.6 with forex prompt
 //
 // POST /api/translate
-// body: { text: string, fromLang: 'en'|'mn', toLang: 'en'|'mn', bookTitle?: string }
-// returns: { translation: string, model: string, cached: boolean, usage: {...} }
-//
-// Requires ANTHROPIC_API_KEY env var (set in Vercel dashboard).
+// body: { text, fromLang, toLang, bookTitle?, provider? }
+// returns: { translation, provider, model?, usage?, cached? }
 
 const MODEL = 'claude-sonnet-4-6';
 
@@ -64,32 +65,94 @@ const SYSTEM_PROMPT = `Та форекс/арилжааны мэргэжилтэ
 const LANG_NAME = { en: 'англи', mn: 'монгол' };
 const LANG_NAME_EN = { en: 'English', mn: 'Mongolian' };
 
+// ──────────────────────────────────────────────────────────────────
+// GOOGLE TRANSLATE (free, unofficial endpoint)
+// ──────────────────────────────────────────────────────────────────
+async function translateWithGoogle(text, fromLang, toLang) {
+  // The unofficial endpoint accepts ~5000 chars at once. Split longer texts
+  // on sentence boundaries to stay under the limit.
+  const CHUNK_LIMIT = 4500;
+  const chunks = [];
+  if (text.length <= CHUNK_LIMIT) {
+    chunks.push(text);
+  } else {
+    let buf = '';
+    const sentences = text.split(/(?<=[.!?。！？\n])\s+/);
+    for (const s of sentences) {
+      if ((buf + s).length > CHUNK_LIMIT && buf) { chunks.push(buf); buf = ''; }
+      buf += (buf ? ' ' : '') + s;
+    }
+    if (buf) chunks.push(buf);
+  }
+
+  const out = [];
+  for (const chunk of chunks) {
+    const url = `https://translate.googleapis.com/translate_a/single` +
+      `?client=gtx&sl=${encodeURIComponent(fromLang)}&tl=${encodeURIComponent(toLang)}` +
+      `&dt=t&q=${encodeURIComponent(chunk)}`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TradingApp/1.0)' },
+    });
+    if (!r.ok) throw new Error(`Google ${r.status}`);
+    const data = await r.json();
+    // data[0] is an array of [translated, original, ...] tuples
+    const parts = (data[0] || []).map((row) => row[0]).filter(Boolean);
+    out.push(parts.join(''));
+  }
+  return out.join('\n').trim();
+}
+
+// ──────────────────────────────────────────────────────────────────
+// CLAUDE (premium, requires ANTHROPIC_API_KEY)
+// ──────────────────────────────────────────────────────────────────
+async function translateWithClaude(text, fromLang, toLang, bookTitle, apiKey) {
+  const userPrompt =
+    `Дараах ${LANG_NAME[fromLang]} текстийг ${LANG_NAME[toLang]} (${LANG_NAME_EN[toLang]}) руу орчуул.` +
+    (bookTitle ? `\n\nНомны нэр: "${bookTitle}"` : '') +
+    `\n\n--- ЭХ ТЕКСТ ---\n${text}\n--- ТӨГСГӨЛ ---`;
+
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 4096,
+      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
+  if (!r.ok) {
+    const errText = await r.text();
+    throw new Error(`Anthropic ${r.status}: ${errText.slice(0, 200)}`);
+  }
+  const data = await r.json();
+  const translation = (data.content || [])
+    .filter((c) => c.type === 'text')
+    .map((c) => c.text)
+    .join('\n')
+    .trim();
+  return { translation, usage: data.usage };
+}
+
+// ──────────────────────────────────────────────────────────────────
+// HANDLER
+// ──────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // CORS for safety (works fine same-origin too)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Use POST' });
-    return;
-  }
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    res.status(500).json({
-      error: 'ANTHROPIC_API_KEY байхгүй',
-      hint: 'Vercel Dashboard → Settings → Environment Variables → ANTHROPIC_API_KEY нэмнэ үү',
-    });
-    return;
-  }
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Use POST' }); return; }
 
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
-  const { text, fromLang, toLang, bookTitle } = body || {};
+  const { text, fromLang, toLang, bookTitle, provider = 'google' } = body || {};
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     res.status(400).json({ error: 'text заавал' });
@@ -104,59 +167,36 @@ export default async function handler(req, res) {
     return;
   }
 
-  const userPrompt =
-    `Дараах ${LANG_NAME[fromLang]} текстийг ${LANG_NAME[toLang]} (${LANG_NAME_EN[toLang]}) руу орчуул.` +
-    (bookTitle ? `\n\nНомны нэр: "${bookTitle}"` : '') +
-    `\n\n--- ЭХ ТЕКСТ ---\n${text}\n--- ТӨГСГӨЛ ---`;
-
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+    if (provider === 'claude') {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        res.status(500).json({
+          error: 'ANTHROPIC_API_KEY байхгүй',
+          hint: 'Vercel Dashboard → Settings → Environment Variables → ANTHROPIC_API_KEY нэмнэ үү',
+          fallback: 'Google орчуулагч ашиглах боломжтой (үнэгүй)',
+        });
+        return;
+      }
+      const { translation, usage } = await translateWithClaude(text, fromLang, toLang, bookTitle, apiKey);
+      res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
+      res.status(200).json({
+        translation,
+        provider: 'claude',
         model: MODEL,
-        max_tokens: 4096,
-        system: [
-          {
-            type: 'text',
-            text: SYSTEM_PROMPT,
-            cache_control: { type: 'ephemeral' },
-          },
-        ],
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-    });
-
-    if (!r.ok) {
-      const errText = await r.text();
-      console.error('Anthropic API error', r.status, errText);
-      res.status(502).json({
-        error: `Anthropic API ${r.status}`,
-        details: errText.slice(0, 500),
+        usage,
+        cached: (usage?.cache_read_input_tokens || 0) > 0,
       });
-      return;
+    } else {
+      const translation = await translateWithGoogle(text, fromLang, toLang);
+      res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
+      res.status(200).json({ translation, provider: 'google' });
     }
-
-    const data = await r.json();
-    const translation = (data.content || [])
-      .filter((c) => c.type === 'text')
-      .map((c) => c.text)
-      .join('\n')
-      .trim();
-
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
-    res.status(200).json({
-      translation,
-      model: MODEL,
-      usage: data.usage,
-      cached: (data.usage?.cache_read_input_tokens || 0) > 0,
-    });
   } catch (err) {
     console.error('translate error', err);
-    res.status(500).json({ error: String(err.message || err) });
+    res.status(502).json({
+      error: String(err.message || err),
+      provider,
+    });
   }
 }
