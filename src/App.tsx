@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   BookOpen, Calculator, FileText, CheckCircle, TrendingUp, AlertTriangle,
   ChevronRight, ChevronLeft, Award, Search, Home, Menu, X, Lock, Library,
-  Zap, Activity, Target, Layers, Sparkles, Flame, Bookmark
+  Zap, Activity, Target, Layers, Sparkles, Flame, Bookmark, BarChart3
 } from 'lucide-react';
 import { lessons, books, svgImages, glossary as baseGlossary, cheatsheet } from './data';
 
@@ -134,6 +134,7 @@ type Asset = {
   priceDigits: number;   // decimals for display
   icon?: string;         // emoji for non-forex
   label?: string;        // long name for non-forex
+  tvSymbol?: string;     // TradingView symbol for chart embed (e.g. "FX:EURUSD")
 };
 
 const FLAGS: Record<string, string> = {
@@ -145,60 +146,60 @@ const FLAGS: Record<string, string> = {
 
 const ASSETS: Asset[] = [
   // Majors (7)
-  { sym: 'EUR/USD', group: 'major', source: { kind: 'forex', base: 'EUR', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'GBP/USD', group: 'major', source: { kind: 'forex', base: 'GBP', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/JPY', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'USD/CHF', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/CAD', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'AUD/USD', group: 'major', source: { kind: 'forex', base: 'AUD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'NZD/USD', group: 'major', source: { kind: 'forex', base: 'NZD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'EUR/USD', group: 'major', source: { kind: 'forex', base: 'EUR', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURUSD' },
+  { sym: 'GBP/USD', group: 'major', source: { kind: 'forex', base: 'GBP', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:GBPUSD' },
+  { sym: 'USD/JPY', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:USDJPY' },
+  { sym: 'USD/CHF', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDCHF' },
+  { sym: 'USD/CAD', group: 'major', source: { kind: 'forex', base: 'USD', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDCAD' },
+  { sym: 'AUD/USD', group: 'major', source: { kind: 'forex', base: 'AUD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:AUDUSD' },
+  { sym: 'NZD/USD', group: 'major', source: { kind: 'forex', base: 'NZD', quote: 'USD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:NZDUSD' },
   // Minors / Crosses (16)
-  { sym: 'EUR/GBP', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'GBP' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'EUR/JPY', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'EUR/CHF', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'EUR/AUD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'EUR/CAD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'EUR/NZD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'GBP/JPY', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'GBP/CHF', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'GBP/AUD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'GBP/CAD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'AUD/JPY', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'AUD/CHF', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'AUD/NZD', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'NZD/JPY', group: 'minor', source: { kind: 'forex', base: 'NZD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'CAD/JPY', group: 'minor', source: { kind: 'forex', base: 'CAD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
-  { sym: 'CHF/JPY', group: 'minor', source: { kind: 'forex', base: 'CHF', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3 },
+  { sym: 'EUR/GBP', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'GBP' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURGBP' },
+  { sym: 'EUR/JPY', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:EURJPY' },
+  { sym: 'EUR/CHF', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURCHF' },
+  { sym: 'EUR/AUD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURAUD' },
+  { sym: 'EUR/CAD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURCAD' },
+  { sym: 'EUR/NZD', group: 'minor', source: { kind: 'forex', base: 'EUR', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:EURNZD' },
+  { sym: 'GBP/JPY', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:GBPJPY' },
+  { sym: 'GBP/CHF', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:GBPCHF' },
+  { sym: 'GBP/AUD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'AUD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:GBPAUD' },
+  { sym: 'GBP/CAD', group: 'minor', source: { kind: 'forex', base: 'GBP', quote: 'CAD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:GBPCAD' },
+  { sym: 'AUD/JPY', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:AUDJPY' },
+  { sym: 'AUD/CHF', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'CHF' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:AUDCHF' },
+  { sym: 'AUD/NZD', group: 'minor', source: { kind: 'forex', base: 'AUD', quote: 'NZD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:AUDNZD' },
+  { sym: 'NZD/JPY', group: 'minor', source: { kind: 'forex', base: 'NZD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:NZDJPY' },
+  { sym: 'CAD/JPY', group: 'minor', source: { kind: 'forex', base: 'CAD', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:CADJPY' },
+  { sym: 'CHF/JPY', group: 'minor', source: { kind: 'forex', base: 'CHF', quote: 'JPY' }, pipSize: 0.01,   contractSize: 100000, priceDigits: 3, tvSymbol: 'FX:CHFJPY' },
   // Exotics (9)
-  { sym: 'USD/CNY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'CNY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/MXN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'MXN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/ZAR', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'ZAR' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/SEK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SEK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/NOK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'NOK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/SGD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SGD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/HKD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'HKD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/TRY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'TRY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
-  { sym: 'USD/PLN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'PLN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5 },
+  { sym: 'USD/CNY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'CNY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX_IDC:USDCNY' },
+  { sym: 'USD/MXN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'MXN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDMXN' },
+  { sym: 'USD/ZAR', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'ZAR' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDZAR' },
+  { sym: 'USD/SEK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SEK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDSEK' },
+  { sym: 'USD/NOK', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'NOK' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDNOK' },
+  { sym: 'USD/SGD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'SGD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDSGD' },
+  { sym: 'USD/HKD', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'HKD' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDHKD' },
+  { sym: 'USD/TRY', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'TRY' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX:USDTRY' },
+  { sym: 'USD/PLN', group: 'exotic', source: { kind: 'forex', base: 'USD', quote: 'PLN' }, pipSize: 0.0001, contractSize: 100000, priceDigits: 5, tvSymbol: 'FX_IDC:USDPLN' },
   // Metals
-  { sym: 'XAU/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'GC=F' }, pipSize: 0.01,  contractSize: 100,  priceDigits: 2, icon: '🥇', label: 'Gold (Алт)' },
-  { sym: 'XAG/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'SI=F' }, pipSize: 0.001, contractSize: 5000, priceDigits: 3, icon: '🥈', label: 'Silver (Мөнгө)' },
-  { sym: 'XPT/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'PL=F' }, pipSize: 0.01,  contractSize: 50,   priceDigits: 2, icon: '⚪', label: 'Platinum (Цагаан алт)' },
+  { sym: 'XAU/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'GC=F' }, pipSize: 0.01,  contractSize: 100,  priceDigits: 2, icon: '🥇', label: 'Gold (Алт)',         tvSymbol: 'OANDA:XAUUSD' },
+  { sym: 'XAG/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'SI=F' }, pipSize: 0.001, contractSize: 5000, priceDigits: 3, icon: '🥈', label: 'Silver (Мөнгө)',     tvSymbol: 'OANDA:XAGUSD' },
+  { sym: 'XPT/USD', group: 'metal', source: { kind: 'yahoo', yahooSym: 'PL=F' }, pipSize: 0.01,  contractSize: 50,   priceDigits: 2, icon: '⚪', label: 'Platinum (Цагаан алт)', tvSymbol: 'TVC:PLATINUM' },
   // Indices
-  { sym: 'SPX500', group: 'index', source: { kind: 'yahoo', yahooSym: '^GSPC' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'S&P 500' },
-  { sym: 'NAS100', group: 'index', source: { kind: 'yahoo', yahooSym: '^NDX' },   pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'NASDAQ 100' },
-  { sym: 'US30',   group: 'index', source: { kind: 'yahoo', yahooSym: '^DJI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇺🇸', label: 'Dow Jones' },
-  { sym: 'GER40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^GDAXI' }, pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇩🇪', label: 'DAX 40' },
-  { sym: 'UK100',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FTSE' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇬🇧', label: 'FTSE 100' },
-  { sym: 'JP225',  group: 'index', source: { kind: 'yahoo', yahooSym: '^N225' },  pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇯🇵', label: 'Nikkei 225' },
-  { sym: 'HK50',   group: 'index', source: { kind: 'yahoo', yahooSym: '^HSI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇭🇰', label: 'Hang Seng' },
-  { sym: 'FRA40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FCHI' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇫🇷', label: 'CAC 40' },
+  { sym: 'SPX500', group: 'index', source: { kind: 'yahoo', yahooSym: '^GSPC' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'S&P 500',     tvSymbol: 'TVC:SPX' },
+  { sym: 'NAS100', group: 'index', source: { kind: 'yahoo', yahooSym: '^NDX' },   pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇺🇸', label: 'NASDAQ 100',  tvSymbol: 'TVC:NDX' },
+  { sym: 'US30',   group: 'index', source: { kind: 'yahoo', yahooSym: '^DJI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇺🇸', label: 'Dow Jones',   tvSymbol: 'TVC:DJI' },
+  { sym: 'GER40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^GDAXI' }, pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇩🇪', label: 'DAX 40',      tvSymbol: 'XETR:DAX' },
+  { sym: 'UK100',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FTSE' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇬🇧', label: 'FTSE 100',    tvSymbol: 'TVC:UKX' },
+  { sym: 'JP225',  group: 'index', source: { kind: 'yahoo', yahooSym: '^N225' },  pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇯🇵', label: 'Nikkei 225',  tvSymbol: 'TVC:NI225' },
+  { sym: 'HK50',   group: 'index', source: { kind: 'yahoo', yahooSym: '^HSI' },   pipSize: 1,   contractSize: 1,  priceDigits: 2, icon: '🇭🇰', label: 'Hang Seng',   tvSymbol: 'TVC:HSI' },
+  { sym: 'FRA40',  group: 'index', source: { kind: 'yahoo', yahooSym: '^FCHI' },  pipSize: 0.1, contractSize: 10, priceDigits: 2, icon: '🇫🇷', label: 'CAC 40',      tvSymbol: 'TVC:CAC40' },
   // Crypto
-  { sym: 'BTC/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'bitcoin' },     pipSize: 1,    contractSize: 1, priceDigits: 0, icon: '₿',  label: 'Bitcoin' },
-  { sym: 'ETH/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ethereum' },    pipSize: 0.1,  contractSize: 1, priceDigits: 2, icon: '⟠',  label: 'Ethereum' },
-  { sym: 'SOL/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'solana' },      pipSize: 0.01, contractSize: 1, priceDigits: 2, icon: '◎',  label: 'Solana' },
-  { sym: 'BNB/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'binancecoin' }, pipSize: 0.01, contractSize: 1, priceDigits: 2, icon: '🟡', label: 'BNB' },
-  { sym: 'XRP/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ripple' },      pipSize: 0.0001, contractSize: 1, priceDigits: 4, icon: '✕', label: 'XRP' },
-  { sym: 'DOGE/USD',group: 'crypto', source: { kind: 'crypto', cgId: 'dogecoin' },    pipSize: 0.0001, contractSize: 1, priceDigits: 5, icon: '🐕', label: 'Dogecoin' },
+  { sym: 'BTC/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'bitcoin' },     pipSize: 1,      contractSize: 1, priceDigits: 0, icon: '₿',  label: 'Bitcoin',  tvSymbol: 'BITSTAMP:BTCUSD' },
+  { sym: 'ETH/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ethereum' },    pipSize: 0.1,    contractSize: 1, priceDigits: 2, icon: '⟠',  label: 'Ethereum', tvSymbol: 'BITSTAMP:ETHUSD' },
+  { sym: 'SOL/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'solana' },      pipSize: 0.01,   contractSize: 1, priceDigits: 2, icon: '◎',  label: 'Solana',   tvSymbol: 'COINBASE:SOLUSD' },
+  { sym: 'BNB/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'binancecoin' }, pipSize: 0.01,   contractSize: 1, priceDigits: 2, icon: '🟡', label: 'BNB',      tvSymbol: 'BINANCE:BNBUSDT' },
+  { sym: 'XRP/USD', group: 'crypto', source: { kind: 'crypto', cgId: 'ripple' },      pipSize: 0.0001, contractSize: 1, priceDigits: 4, icon: '✕', label: 'XRP',       tvSymbol: 'BITSTAMP:XRPUSD' },
+  { sym: 'DOGE/USD',group: 'crypto', source: { kind: 'crypto', cgId: 'dogecoin' },    pipSize: 0.0001, contractSize: 1, priceDigits: 5, icon: '🐕', label: 'Dogecoin', tvSymbol: 'BINANCE:DOGEUSDT' },
 ];
 
 type FxRates = { now: Record<string, number>; prev: Record<string, number> } | null;
@@ -303,6 +304,124 @@ function computeAsset(a: Asset, fx: FxRates, ext: ExtPrices, lot: number) {
   return { ...a, price: current, prevPrice: prev, pipsDelta, pipUSD, dollarChange };
 }
 
+// ============ TRADINGVIEW WIDGETS ============
+function TradingViewWidget({ scriptSrc, config, className, height }: { scriptSrc: string; config: any; className?: string; height?: number | string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.innerHTML = '';
+    const inner = document.createElement('div');
+    inner.className = 'tradingview-widget-container__widget';
+    if (height) inner.style.height = typeof height === 'number' ? `${height}px` : height;
+    container.appendChild(inner);
+    const script = document.createElement('script');
+    script.src = scriptSrc;
+    script.async = true;
+    script.type = 'text/javascript';
+    script.innerHTML = JSON.stringify(config);
+    container.appendChild(script);
+    return () => { if (container) container.innerHTML = ''; };
+  }, [scriptSrc, JSON.stringify(config), height]);
+  return <div className={`tradingview-widget-container ${className || ''}`} ref={containerRef} style={{ height }} />;
+}
+
+function TradingViewTickerTape() {
+  const config = {
+    symbols: [
+      { description: 'EUR/USD', proName: 'FX:EURUSD' },
+      { description: 'GBP/USD', proName: 'FX:GBPUSD' },
+      { description: 'USD/JPY', proName: 'FX:USDJPY' },
+      { description: 'AUD/USD', proName: 'FX:AUDUSD' },
+      { description: 'Gold',    proName: 'OANDA:XAUUSD' },
+      { description: 'Silver',  proName: 'OANDA:XAGUSD' },
+      { description: 'S&P 500', proName: 'TVC:SPX' },
+      { description: 'NASDAQ',  proName: 'TVC:NDX' },
+      { description: 'DAX',     proName: 'XETR:DAX' },
+      { description: 'Nikkei',  proName: 'TVC:NI225' },
+      { description: 'BTC',     proName: 'BITSTAMP:BTCUSD' },
+      { description: 'ETH',     proName: 'BITSTAMP:ETHUSD' },
+      { description: 'SOL',     proName: 'COINBASE:SOLUSD' },
+    ],
+    colorTheme: 'dark',
+    isTransparent: true,
+    showSymbolLogo: true,
+    displayMode: 'adaptive',
+    locale: 'en',
+  };
+  return (
+    <TradingViewWidget
+      scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+      config={config}
+    />
+  );
+}
+
+function TradingViewChartModal({ asset, onClose }: { asset: Asset; onClose: () => void }) {
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onEsc);
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onEsc); document.body.style.overflow = ''; };
+  }, [onClose]);
+
+  const config = {
+    autosize: true,
+    symbol: asset.tvSymbol || 'FX:EURUSD',
+    interval: '60',
+    timezone: 'Asia/Ulaanbaatar',
+    theme: 'dark',
+    style: '1',
+    locale: 'en',
+    enable_publishing: false,
+    backgroundColor: 'rgba(10, 14, 26, 1)',
+    gridColor: 'rgba(58, 67, 97, 0.15)',
+    hide_top_toolbar: false,
+    hide_legend: false,
+    save_image: false,
+    withdateranges: true,
+    allow_symbol_change: true,
+    details: false,
+    studies: ['STD;EMA', 'STD;RSI'],
+    support_host: 'https://www.tradingview.com',
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 animate-fade-in"
+      onClick={onClose}>
+      <div className="relative w-full max-w-5xl h-[85vh] glass-strong rounded-2xl overflow-hidden flex flex-col"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-ink-700">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{assetIcon(asset)}</span>
+            <div>
+              <div className="font-display font-bold text-white text-lg">{asset.sym}</div>
+              <div className="text-[10px] uppercase tracking-wider text-ink-400">{asset.label || asset.group} · TradingView Chart</div>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="w-9 h-9 rounded-lg bg-ink-800 hover:bg-neon-red/15 hover:text-neon-red text-ink-300 flex items-center justify-center transition-all">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex-1 bg-ink-950">
+          <TradingViewWidget
+            scriptSrc="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
+            config={config}
+            height="100%"
+            className="h-full"
+          />
+        </div>
+        <div className="px-4 py-2 text-[10px] text-ink-500 text-center border-t border-ink-700">
+          <a href={`https://www.tradingview.com/symbols/${(asset.tvSymbol || '').replace(':', '-')}/`}
+            target="_blank" rel="noopener noreferrer"
+            className="text-neon-cyan hover:underline">{asset.sym} on TradingView</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function assetIcon(a: Asset) {
   if (a.source.kind === 'forex') {
     return `${FLAGS[a.source.base] || '🏳️'}${FLAGS[a.source.quote] || '🏳️'}`;
@@ -327,6 +446,7 @@ function PairsView() {
     () => new Set(ASSETS.filter(a => a.group === 'major').map(a => a.sym))
   );
   const [search, setSearch] = useState('');
+  const [chartAsset, setChartAsset] = useState<Asset | null>(null);
 
   const categoryPairs = useMemo(() => ASSETS.filter(a => a.group === category), [category]);
   const filteredCategoryPairs = useMemo(() => {
@@ -521,13 +641,20 @@ function PairsView() {
           {rows.map((r: any) => {
             const up = r.dollarChange >= 0;
             return (
-              <div key={r.sym} className={`glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
+              <div key={r.sym} className={`group glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
                   <span className="text-lg leading-none">{assetIcon(r)}</span>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <div className="font-mono font-bold text-white text-sm">{r.sym}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-ink-400">{r.label || r.group}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-ink-400 truncate">{r.label || r.group}</div>
                   </div>
+                  <button
+                    onClick={() => setChartAsset(r)}
+                    title="TradingView чарт нээх"
+                    className="ml-auto md:ml-2 w-8 h-8 rounded-lg bg-ink-800 hover:bg-neon-cyan/15 hover:text-neon-cyan text-ink-400 flex items-center justify-center transition-all"
+                  >
+                    <BarChart3 size={14} />
+                  </button>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">Ханш</div>
@@ -565,9 +692,12 @@ function PairsView() {
           <div>• Forex (33 хослол): Frankfurter / ECB</div>
           <div>• Metals + Indices (10): Yahoo Finance via /api/quotes</div>
           <div>• Crypto (6): CoinGecko + 24ц өөрчлөлт</div>
+          <div>• Чарт: TradingView Advanced Chart (📊 товч)</div>
           <div>• 2 минут тутамд автомат шинэчлэгдэнэ</div>
         </div>
       </div>
+
+      {chartAsset && <TradingViewChartModal asset={chartAsset} onClose={() => setChartAsset(null)} />}
     </div>
   );
 }
@@ -692,8 +822,6 @@ export default function TradingApp() {
       });
     }
   };
-
-  const { items: tickerItems, live: tickerLive } = useLiveTicker();
 
   const lessonsByLevel = lessons.reduce<AnyObj>((acc, l) => {
     if (!acc[l.level]) acc[l.level] = [];
@@ -926,38 +1054,9 @@ export default function TradingApp() {
       <div className="fixed inset-0 bg-aurora pointer-events-none" />
       <div className="fixed inset-0 bg-grid opacity-40 pointer-events-none" />
 
-      {/* Top ticker — live data from CoinGecko + Frankfurter ECB */}
-      <div className="relative z-10 bg-ink-900/80 backdrop-blur border-b border-ink-700 overflow-hidden">
-        <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold shrink-0 ${tickerLive ? 'bg-neon-green/15 text-neon-green' : 'bg-ink-700 text-ink-300'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${tickerLive ? 'bg-neon-green animate-glow' : 'bg-ink-400'}`} />
-            {tickerLive ? 'LIVE' : 'Татаж...'}
-          </span>
-          <div className="flex-1 overflow-hidden">
-            <div className="flex animate-ticker whitespace-nowrap">
-              {[...Array(2)].map((_, k) => (
-                <div key={k} className="flex gap-6 px-4 shrink-0">
-                  {tickerItems.length === 0 ? (
-                    <span className="text-ink-400">Зах зээлийн үнэ татаж байна...</span>
-                  ) : tickerItems.map(it => {
-                    const up = it.change >= 0;
-                    return (
-                      <span key={it.sym} className="inline-flex items-center gap-1.5">
-                        <span className={`w-1 h-1 rounded-full ${up ? 'bg-neon-green' : 'bg-neon-red'}`} />
-                        <span className="text-ink-100 font-semibold">{it.sym}</span>
-                        <span className="text-ink-200">{formatPrice(it.price, it.digits)}</span>
-                        <span className={up ? 'text-neon-green' : 'text-neon-red'}>
-                          {up ? '▲' : '▼'} {Math.abs(it.change).toFixed(2)}%
-                        </span>
-                      </span>
-                    );
-                  })}
-                  <span className="text-ink-500">⚠ Боловсролын зорилготой</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Top ticker — TradingView Ticker Tape (real-time) */}
+      <div className="relative z-10 bg-ink-900/60 backdrop-blur border-b border-ink-700">
+        <TradingViewTickerTape />
       </div>
 
       {/* Market sessions strip (forex factory style, ULAT time) */}
