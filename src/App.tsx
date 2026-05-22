@@ -310,44 +310,62 @@ function assetIcon(a: Asset) {
   return a.icon || '◆';
 }
 
+const CATEGORIES: { id: AssetGroup; label: string; emoji: string; color: string }[] = [
+  { id: 'major',  label: 'Major',   emoji: '💱', color: 'green'  },
+  { id: 'minor',  label: 'Minor',   emoji: '↔️', color: 'violet' },
+  { id: 'exotic', label: 'Exotic',  emoji: '🌐', color: 'amber'  },
+  { id: 'metal',  label: 'Metals',  emoji: '🥇', color: 'amber'  },
+  { id: 'index',  label: 'Indices', emoji: '📈', color: 'violet' },
+  { id: 'crypto', label: 'Crypto',  emoji: '₿',  color: 'cyan'   },
+];
+
 function PairsView() {
   const { fx, ext, live, updated } = useAllAssets();
   const [lot, setLot] = useState(0.1);
-  const [filter, setFilter] = useState<'all' | AssetGroup>('all');
+  const [category, setCategory] = useState<AssetGroup>('major');
+  const [selectedSyms, setSelectedSyms] = useState<Set<string>>(
+    () => new Set(ASSETS.filter(a => a.group === 'major').map(a => a.sym))
+  );
   const [search, setSearch] = useState('');
 
+  const categoryPairs = useMemo(() => ASSETS.filter(a => a.group === category), [category]);
+  const filteredCategoryPairs = useMemo(() => {
+    if (!search) return categoryPairs;
+    const s = search.toLowerCase();
+    return categoryPairs.filter(a => a.sym.toLowerCase().includes(s) || (a.label || '').toLowerCase().includes(s));
+  }, [categoryPairs, search]);
+
+  const onChangeCategory = (g: AssetGroup) => {
+    setCategory(g);
+    setSelectedSyms(new Set(ASSETS.filter(a => a.group === g).map(a => a.sym)));
+    setSearch('');
+  };
+
+  const toggleSym = (sym: string) => {
+    setSelectedSyms(prev => {
+      const next = new Set(prev);
+      if (next.has(sym)) next.delete(sym); else next.add(sym);
+      return next;
+    });
+  };
+  const selectAll = () => setSelectedSyms(new Set(categoryPairs.map(a => a.sym)));
+  const clearAll = () => setSelectedSyms(new Set());
+
   const rows = useMemo(() => {
-    return ASSETS
-      .filter(a => filter === 'all' || a.group === filter)
-      .filter(a => {
-        if (!search) return true;
-        const s = search.toLowerCase();
-        return a.sym.toLowerCase().includes(s) || (a.label || '').toLowerCase().includes(s);
-      })
+    return categoryPairs
+      .filter(a => selectedSyms.has(a.sym))
       .map(a => computeAsset(a, fx, ext, lot))
       .filter(Boolean) as any[];
-  }, [fx, ext, lot, filter, search]);
+  }, [fx, ext, lot, categoryPairs, selectedSyms]);
 
   const dataReady = !!fx;
   const lotPresets = [0.01, 0.1, 0.5, 1, 5, 10];
-  const filters: any[] = [
-    { id: 'all',    label: '📊 Бүх хөрөнгө',    count: ASSETS.length,                            color: 'cyan'   },
-    { id: 'major',  label: '💱 Major (Гол валют)', count: ASSETS.filter(a => a.group === 'major').length,  color: 'green'  },
-    { id: 'minor',  label: '↔️ Minor (Cross)',    count: ASSETS.filter(a => a.group === 'minor').length,  color: 'violet' },
-    { id: 'exotic', label: '🌐 Exotic',           count: ASSETS.filter(a => a.group === 'exotic').length, color: 'amber'  },
-    { id: 'metal',  label: '🥇 Metals (Алт/Мөнгө)', count: ASSETS.filter(a => a.group === 'metal').length, color: 'amber'  },
-    { id: 'index',  label: '📈 Indices (Индекс)',  count: ASSETS.filter(a => a.group === 'index').length, color: 'violet' },
-    { id: 'crypto', label: '₿ Crypto',            count: ASSETS.filter(a => a.group === 'crypto').length, color: 'cyan'   },
-  ];
-  const currentFilter = filters.find(f => f.id === filter)!;
-
-  const [filterOpen, setFilterOpen] = useState(false);
-  useEffect(() => {
-    if (!filterOpen) return;
-    const close = () => setFilterOpen(false);
-    setTimeout(() => document.addEventListener('click', close, { once: true }), 0);
-    return () => document.removeEventListener('click', close);
-  }, [filterOpen]);
+  const TONE: Record<string, string> = {
+    cyan:   'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/50',
+    green:  'bg-neon-green/15 text-neon-green border-neon-green/50',
+    violet: 'bg-neon-violet/15 text-neon-violet border-neon-violet/50',
+    amber:  'bg-neon-amber/15 text-neon-amber border-neon-amber/50',
+  };
 
   const step = lot < 0.1 ? 0.01 : lot < 1 ? 0.1 : 1;
   const decLot = () => setLot(Math.max(0.01, +(lot - step).toFixed(2)));
@@ -415,54 +433,72 @@ function PairsView() {
         </div>
       </div>
 
-      {/* Filter dropdown + search */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <div className="relative" onClick={e => e.stopPropagation()}>
-          {(() => {
-            const TONE: Record<string, { btn: string; opt: string; bar: string }> = {
-              cyan:   { btn: 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/40',     opt: 'bg-neon-cyan/15 text-neon-cyan',     bar: 'border-l-neon-cyan' },
-              green:  { btn: 'bg-neon-green/15 text-neon-green border-neon-green/40',  opt: 'bg-neon-green/15 text-neon-green',  bar: 'border-l-neon-green' },
-              violet: { btn: 'bg-neon-violet/15 text-neon-violet border-neon-violet/40', opt: 'bg-neon-violet/15 text-neon-violet', bar: 'border-l-neon-violet' },
-              amber:  { btn: 'bg-neon-amber/15 text-neon-amber border-neon-amber/40',  opt: 'bg-neon-amber/15 text-neon-amber',  bar: 'border-l-neon-amber' },
-            };
-            const t = TONE[currentFilter.color];
+      {/* STEP 1: Category selector */}
+      <div className="mb-3">
+        <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold mb-2 px-1">1. Төрлөө сонго</div>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {CATEGORIES.map(c => {
+            const active = category === c.id;
+            const count = ASSETS.filter(a => a.group === c.id).length;
             return (
-              <>
-                <button onClick={() => setFilterOpen(!filterOpen)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all min-w-[200px] ${t.btn}`}>
-                  <span>📂</span>
-                  <span className="flex-1 text-left">{currentFilter.label}</span>
-                  <span className="text-xs opacity-70 font-mono">{currentFilter.count}</span>
-                  <ChevronRight size={16} className={`transition-transform ${filterOpen ? 'rotate-90' : ''}`} />
-                </button>
-                {filterOpen && (
-                  <div className="absolute top-full left-0 mt-1.5 w-full min-w-[220px] glass-strong rounded-xl overflow-hidden z-20 shadow-card animate-fade-in">
-                    {filters.map(f => {
-                      const isActive = filter === f.id;
-                      const ft = TONE[f.color];
-                      return (
-                        <button key={f.id}
-                          onClick={() => { setFilter(f.id); setFilterOpen(false); }}
-                          className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all text-left border-l-2 ${
-                            isActive ? `${ft.opt} ${ft.bar}` : 'text-ink-200 hover:bg-white/5 border-l-transparent'
-                          }`}>
-                          {isActive ? '●' : '○'}
-                          <span className="flex-1">{f.label}</span>
-                          <span className="text-xs opacity-60 font-mono">{f.count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
+              <button key={c.id} onClick={() => onChangeCategory(c.id)}
+                className={`shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-bold transition-all ${
+                  active ? `${TONE[c.color]} shadow-glow-${c.color === 'green' ? 'green' : c.color === 'cyan' ? 'cyan' : c.color === 'violet' ? 'violet' : 'cyan'}` : 'glass text-ink-300 hover:text-white border-ink-700'
+                }`}>
+                <span>{c.emoji}</span>
+                <span>{c.label}</span>
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${active ? 'bg-black/30' : 'bg-ink-800'}`}>{count}</span>
+              </button>
             );
-          })()}
+          })}
         </div>
-        <div className="relative flex-1 min-w-[150px]">
+      </div>
+
+      {/* STEP 2: Pair picker */}
+      <div className="glass rounded-2xl p-4 mb-4">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold">2. Хослолоо сонго</div>
+            <div className="text-sm text-ink-200">
+              <span className="font-bold text-white">{selectedSyms.size}</span>
+              <span className="text-ink-400"> / {categoryPairs.length} идэвхтэй</span>
+            </div>
+          </div>
+          <div className="flex gap-1.5">
+            <button onClick={selectAll}
+              className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40 hover:bg-neon-cyan/25">
+              ✓ Бүгд
+            </button>
+            <button onClick={clearAll}
+              className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-ink-800 text-ink-300 border border-ink-700 hover:border-neon-red/40 hover:text-neon-red">
+              ✕ Цэвэр
+            </button>
+          </div>
+        </div>
+        <div className="relative mb-2.5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" size={14} />
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="EUR, JPY..."
-            className="w-full pl-9 pr-3 py-2 glass rounded-lg text-white text-sm outline-none focus:border-neon-cyan" />
+            placeholder={`Хайх... (${category} дотроос)`}
+            className="w-full pl-9 pr-3 py-2 bg-ink-900/60 border border-ink-700 rounded-lg text-white text-sm outline-none focus:border-neon-cyan" />
+        </div>
+        <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-y-auto">
+          {filteredCategoryPairs.length === 0 ? (
+            <div className="text-xs text-ink-400 py-2">Олдсонгүй</div>
+          ) : filteredCategoryPairs.map(a => {
+            const selected = selectedSyms.has(a.sym);
+            return (
+              <button key={a.sym} onClick={() => toggleSym(a.sym)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 ${
+                  selected
+                    ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/50 shadow-glow-cyan'
+                    : 'bg-ink-800/60 text-ink-400 border-ink-700 hover:text-white hover:border-ink-500'
+                }`}>
+                <span className="text-sm leading-none">{assetIcon(a)}</span>
+                <span>{a.sym}</span>
+                {selected && <span className="text-[10px] text-neon-green">●</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
