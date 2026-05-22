@@ -5,6 +5,7 @@ import {
   Zap, Activity, Target, Layers, Sparkles, Flame, Bookmark, BarChart3
 } from 'lucide-react';
 import { lessons, books, svgImages, glossary as baseGlossary, cheatsheet } from './data';
+import PdfsView from './PdfsView';
 
 type AnyObj = Record<string, any>;
 
@@ -948,7 +949,8 @@ export default function TradingApp() {
     { icon: Home, label: 'Нүүр', target: 'home' },
     { icon: Activity, label: 'Live хослол', target: 'pairs' },
     { icon: BookOpen, label: 'Хичээл', target: 'lessons' },
-    { icon: Library, label: 'Ном', target: 'library' },
+    { icon: FileText, label: 'PDF Ном', target: 'pdfs' },
+    { icon: Library, label: 'Хураангуй', target: 'library' },
     { icon: Zap, label: 'Cheat', target: 'cheat' },
     { icon: Calculator, label: 'Тооцоо', target: 'calc' },
     { icon: FileText, label: 'Толь', target: 'glossary' },
@@ -1244,6 +1246,8 @@ export default function TradingApp() {
               progress={progress} startLesson={startLesson} isLessonUnlocked={isLessonUnlocked} />}
 
             {view === 'pairs' && <PairsView />}
+
+            {view === 'pdfs' && <PdfsView />}
 
             {view === 'lessons' && (
               <div className="animate-fade-in">
@@ -1621,8 +1625,8 @@ export default function TradingApp() {
             { icon: Home, label: 'Нүүр', target: 'home' },
             { icon: Activity, label: 'Live', target: 'pairs' },
             { icon: BookOpen, label: 'Хичээл', target: 'lessons' },
+            { icon: FileText, label: 'PDF', target: 'pdfs' },
             { icon: Calculator, label: 'Тоо', target: 'calc' },
-            { icon: Award, label: 'Явц', target: 'progress' },
           ].map(n => (
             <button key={n.target} onClick={() => setView(n.target)}
               className={`flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all ${
@@ -1697,9 +1701,13 @@ function HomeView({ setView, lessons, books, glossary, completedCount, overallPr
               className="px-5 py-3 bg-neon-green/15 border border-neon-green/40 text-neon-green hover:bg-neon-green/25 rounded-xl font-bold text-sm flex items-center gap-2">
               📊 Live хослол
             </button>
+            <button onClick={() => setView('pdfs')}
+              className="px-5 py-3 bg-neon-violet/15 border border-neon-violet/40 text-neon-violet hover:bg-neon-violet/25 rounded-xl font-bold text-sm flex items-center gap-2">
+              📕 PDF Номын Сан
+            </button>
             <button onClick={() => setView('library')}
               className="px-5 py-3 glass hover:bg-white/10 rounded-xl font-bold text-sm flex items-center gap-2">
-              📚 Номын сан
+              📚 Хураангуй
             </button>
             <button onClick={() => setView('cheat')}
               className="px-5 py-3 glass hover:bg-white/10 rounded-xl font-bold text-sm flex items-center gap-2">
