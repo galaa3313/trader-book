@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, lazy, Suspense } from 'react';
 import { BookOpen, FileText, Clock, Download } from 'lucide-react';
 import { BOOKS, BOOK_TOPICS, type BookMeta, type BookLang, type BookDifficulty } from './data/books';
 import { useBookCover } from './useBookCover';
+
+const PdfReader = lazy(() => import('./PdfReader'));
 
 type LangFilter = 'all' | BookLang;
 type DiffFilter = 'all' | BookDifficulty;
@@ -58,7 +60,7 @@ function CoverImage({ file, title, accent }: { file: string; title: string; acce
   );
 }
 
-function BookCard({ book, progress }: { book: BookMeta; progress?: number }) {
+function BookCard({ book, onOpen, progress }: { book: BookMeta; onOpen: (b: BookMeta) => void; progress?: number }) {
   const acc = ACCENT[book.accentColor || 'cyan'] || ACCENT.cyan;
   const diff = DIFF_META[book.difficulty];
   const lang = LANG_META[book.language];
@@ -122,14 +124,12 @@ function BookCard({ book, progress }: { book: BookMeta; progress?: number }) {
 
       {/* Actions */}
       <div className="flex gap-2 mt-auto">
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => onOpen(book)}
           className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-all bg-gradient-to-r ${acc.bg} ${acc.ring} ${acc.text} hover:bg-ink-800`}
         >
           <BookOpen size={14} /> Унших
-        </a>
+        </button>
         <a
           href={url}
           download={book.file}
@@ -151,6 +151,7 @@ export default function PdfsView() {
   const [langFilter, setLangFilter] = useState<LangFilter>('all');
   const [diffFilter, setDiffFilter] = useState<DiffFilter>('all');
   const [search, setSearch] = useState('');
+  const [readingBook, setReadingBook] = useState<BookMeta | null>(null);
 
   const filtered = useMemo(() => {
     return BOOKS.filter(b => {
@@ -222,18 +223,25 @@ export default function PdfsView() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(book => (
-            <BookCard key={book.id} book={book} />
+            <BookCard key={book.id} book={book} onOpen={setReadingBook} />
           ))}
         </div>
       )}
 
-      <div className="mt-6 p-3 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400">
+      <div className="mt-6 p-3 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400 space-y-1">
         <div className="font-bold text-ink-200 mb-1">💡 Тайлбар</div>
-        <div>• Cover нь PDF-ийн эхний хуудаснаас автоматаар үүсгэгдэнэ (pdf.js)</div>
-        <div>• Эхний удаа удаан, дараа нь localStorage cache-аас шууд гарна</div>
-        <div>• "Унших" товч PDF-ийг шинэ tab-д нээнэ. ⬇ татаж авах товч офлайн уншихад</div>
-        <div>• Шинэ ном нэмэх: <code className="text-neon-cyan">public/books/</code> руу PDF хийгээд <code className="text-neon-cyan">src/data/books.ts</code>-д бүртгэнэ</div>
+        <div>• Cover автомат үүсгэгдэнэ — PDF-ийн 1-р хуудаснаас (pdf.js), эхний удаа удаан, дараа localStorage cache</div>
+        <div>• "Унших" товч → дотоод PDF reader нээнэ (шинэ tab биш)</div>
+        <div>• Reader дотор 🇬🇧 EN / 🇲🇳 MN <strong>хэлний toggle</strong> — өөр хэл сонгоход AI орчуулна (Claude Sonnet 4.6)</div>
+        <div>• Орчуулга хуудас тус бүрд хийгдэж <strong>localStorage cache</strong> хийгдэнэ</div>
+        <div>• Keyboard: <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">←→</kbd> хуудас · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">L</kbd> хэл · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">B</kbd> хавчуурга · <kbd className="px-1 py-0.5 bg-ink-800 rounded text-neon-cyan">F</kbd> бүтэн дэлгэц</div>
       </div>
+
+      {readingBook && (
+        <Suspense fallback={<div className="fixed inset-0 z-50 bg-ink-950 flex items-center justify-center text-ink-300">PDF reader ачаалж байна...</div>}>
+          <PdfReader book={readingBook} onClose={() => setReadingBook(null)} />
+        </Suspense>
+      )}
     </div>
   );
 }

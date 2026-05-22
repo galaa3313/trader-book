@@ -7,6 +7,9 @@
     },
     "api/forex.js": {
       "maxDuration": 10
+    },
+    "api/translate.js": {
+      "maxDuration": 60
     }
   }
 }
