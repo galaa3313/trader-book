@@ -11,14 +11,76 @@ body,
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: #FFFFFF;
-  color: #0F1F35;
-  font-weight: 300;
+  background: #05070D;
+  color: #DDE3F2;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, .font-serif {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  letter-spacing: 0.01em;
+h1, h2, h3, .font-display {
+  font-family: 'Space Grotesk', Inter, sans-serif;
+  letter-spacing: -0.015em;
 }
+
+/* Animated background grid */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(91, 141, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 141, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Subtle aurora gradient */
+.bg-aurora {
+  background:
+    radial-gradient(at 12% 18%, rgba(34, 245, 162, 0.10) 0px, transparent 50%),
+    radial-gradient(at 85% 8%, rgba(91, 141, 255, 0.10) 0px, transparent 50%),
+    radial-gradient(at 70% 95%, rgba(169, 139, 255, 0.08) 0px, transparent 50%);
+}
+
+/* Glass card */
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.glass-strong {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Shimmer text */
+.shimmer-text {
+  background: linear-gradient(90deg, #DDE3F2 0%, #22F5A2 25%, #5BD7FF 50%, #A98BFF 75%, #DDE3F2 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0A0E1A; }
+::-webkit-scrollbar-thumb { background: #252E47; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #3A4361; }
+
+/* Focus ring */
+input:focus, select:focus, button:focus-visible {
+  outline: 2px solid rgba(91, 215, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Smooth scroll for anchors */
+html { scroll-behavior: smooth; }
+
+/* Selection */
+::selection { background: rgba(34, 245, 162, 0.3); color: #fff; }
+
+/* Safe area */
+.pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
