@@ -4,6 +4,9 @@
   "functions": {
     "api/quotes.js": {
       "maxDuration": 10
+    },
+    "api/forex.js": {
+      "maxDuration": 10
     }
   }
 }

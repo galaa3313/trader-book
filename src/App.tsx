@@ -222,7 +222,6 @@ function useAllAssets() {
 
   useEffect(() => {
     let cancelled = false;
-    const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
     const setStatus = (k: string, s: SourceState) =>
       setSources(prev => ({ ...prev, [k]: s }));
 
@@ -234,28 +233,25 @@ function useAllAssets() {
         yahoo:  prev.yahoo.status  === 'ok' ? prev.yahoo  : { status: 'loading' },
       }));
 
-      // 1. Forex via Frankfurter
-      Promise.all([
-        fetch('https://api.frankfurter.app/latest?from=USD').then(r => {
-          if (!r.ok) throw new Error(`Frankfurter latest HTTP ${r.status}`);
+      // 1. Forex via /api/forex proxy (avoids CORS + Frankfurter quirks, has fallbacks)
+      fetch('/api/forex')
+        .then(r => {
+          if (!r.ok) throw new Error(`/api/forex HTTP ${r.status}`);
           return r.json();
-        }),
-        fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`).then(r => {
-          if (!r.ok) throw new Error(`Frankfurter prev HTTP ${r.status}`);
-          return r.json();
-        }),
-      ])
-        .then(([n, p]) => {
+        })
+        .then(data => {
           if (cancelled) return;
-          if (!n?.rates || !p?.rates) throw new Error('Invalid response shape');
-          console.log('[Live] ✓ Frankfurter:', Object.keys(n.rates).length, 'currencies');
-          setFx({ now: { USD: 1, ...n.rates }, prev: { USD: 1, ...p.rates } });
+          if (data?.error) throw new Error(data.error);
+          if (!data?.now || !data?.prev) throw new Error('Invalid forex response');
+          console.log('[Live] ✓ Forex:', Object.keys(data.now).length, 'currencies',
+            data.warning ? `(${data.warning})` : '');
+          setFx({ now: data.now, prev: data.prev });
           setUpdated(new Date());
-          setStatus('forex', { status: 'ok' });
+          setStatus('forex', { status: 'ok', error: data.warning });
         })
         .catch(err => {
           if (cancelled) return;
-          console.error('[Live] ✕ Frankfurter failed:', err);
+          console.error('[Live] ✕ /api/forex failed:', err);
           setStatus('forex', { status: 'error', error: String(err.message || err) });
         });
 
@@ -744,8 +740,16 @@ function PairsView() {
         <div className="space-y-1.5">
           {rows.map((r: any) => {
             const hasData = r.price != null;
+            const srcKey = r.source.kind === 'forex' ? 'forex' : r.source.kind === 'crypto' ? 'crypto' : 'yahoo';
+            const srcSt = sources[srcKey];
             const up = hasData && r.dollarChange >= 0;
-            const Mute = ({ children }: any) => <span className="text-ink-500">{children}</span>;
+            const Skeleton = () => (
+              <span className="inline-block h-3 w-12 align-middle bg-ink-700/60 rounded animate-pulse" />
+            );
+            const ErrLabel = () => (
+              <span className="text-neon-red text-[10px]" title={srcSt.error || ''}>Алдаа</span>
+            );
+            const Cell = ({ children }: any) => hasData ? children : srcSt.status === 'loading' ? <Skeleton /> : srcSt.status === 'error' ? <ErrLabel /> : <span className="text-ink-500">—</span>;
             return (
               <div key={r.sym} className={`group glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
@@ -765,25 +769,25 @@ function PairsView() {
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">Ханш</div>
                   <div className="font-mono text-sm text-ink-100">
-                    {hasData ? r.price.toFixed(r.priceDigits) : <Mute>—</Mute>}
+                    <Cell>{hasData && r.price.toFixed(r.priceDigits)}</Cell>
                   </div>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">$/pip</div>
                   <div className="font-mono text-sm text-neon-cyan">
-                    {hasData ? `$${r.pipUSD.toFixed(2)}` : <Mute>—</Mute>}
+                    <Cell>{hasData && `$${r.pipUSD.toFixed(2)}`}</Cell>
                   </div>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">Pips</div>
                   <div className={`font-mono text-sm font-bold ${hasData ? (up ? 'text-neon-green' : 'text-neon-red') : 'text-ink-500'}`}>
-                    {hasData ? `${up ? '+' : ''}${r.pipsDelta.toFixed(1)}` : '—'}
+                    <Cell>{hasData && `${up ? '+' : ''}${r.pipsDelta.toFixed(1)}`}</Cell>
                   </div>
                 </div>
                 <div className="col-span-12 md:col-span-3 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">USD ({lot} lot)</div>
                   <div className={`font-mono text-base font-bold ${hasData ? (up ? 'text-neon-green' : 'text-neon-red') : 'text-ink-500'}`}>
-                    {hasData ? `${up ? '▲' : '▼'} ${up ? '+' : '-'}$${Math.abs(r.dollarChange).toFixed(2)}` : '—'}
+                    <Cell>{hasData && `${up ? '▲' : '▼'} ${up ? '+' : '-'}$${Math.abs(r.dollarChange).toFixed(2)}`}</Cell>
                   </div>
                 </div>
               </div>
@@ -799,8 +803,8 @@ function PairsView() {
         <div>• <span className="text-neon-amber">USD өөрчлөлт</span> — Хэрэв та 24 цагийн өмнө нээсэн бол одоо хэдэн доллар</div>
         <div className="mt-2 pt-2 border-t border-ink-700/60 text-[11px]">
           <div className="font-bold text-ink-300 mb-0.5">📡 Live эх сурвалж</div>
-          <div>• Forex (33 хослол): Frankfurter / ECB</div>
-          <div>• Metals + Indices (10): Yahoo Finance via /api/quotes</div>
+          <div>• Forex (33 хослол): <code>/api/forex</code> (Frankfurter ECB → open.er-api fallback)</div>
+          <div>• Metals + Indices (10): <code>/api/quotes</code> (Yahoo Finance)</div>
           <div>• Crypto (6): CoinGecko + 24ц өөрчлөлт</div>
           <div>• Чарт: TradingView Advanced Chart (📊 товч)</div>
           <div>• 2 минут тутамд автомат шинэчлэгдэнэ</div>
