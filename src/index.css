@@ -84,3 +84,7 @@ html { scroll-behavior: smooth; }
 
 /* Safe area */
 .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+/* Hide horizontal scrollbar for session strip */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

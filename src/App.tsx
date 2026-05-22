@@ -64,6 +64,112 @@ function formatPrice(n: number, digits: number) {
   return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
+// ============ MARKET SESSIONS (Forex Factory style) ============
+type Session = { name: string; flag: string; openUTC: number; closeUTC: number };
+
+const SESSIONS: Session[] = [
+  { name: 'Sydney',   flag: '🇦🇺', openUTC: 21, closeUTC: 6  },
+  { name: 'Tokyo',    flag: '🇯🇵', openUTC: 23, closeUTC: 8  },
+  { name: 'London',   flag: '🇬🇧', openUTC: 7,  closeUTC: 16 },
+  { name: 'New York', flag: '🇺🇸', openUTC: 12, closeUTC: 21 },
+];
+
+function useNowTick(intervalMs = 30000) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+function isForexWeekendClosed(now: Date) {
+  const day = now.getUTCDay(); // 0=Sun, 6=Sat
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  if (day === 6) return true;
+  if (day === 0 && mins < 21 * 60) return true;
+  if (day === 5 && mins >= 21 * 60) return true;
+  return false;
+}
+
+function sessionStatus(s: Session, now: Date) {
+  if (isForexWeekendClosed(now)) return { open: false, weekend: true, minsUntil: 0 };
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const openMins = s.openUTC * 60;
+  const closeMins = s.closeUTC * 60;
+  const wraps = openMins >= closeMins;
+  const isOpen = wraps ? (mins >= openMins || mins < closeMins) : (mins >= openMins && mins < closeMins);
+  let minsUntil;
+  if (isOpen) {
+    if (wraps && mins >= openMins) minsUntil = (24 * 60 - mins) + closeMins;
+    else minsUntil = closeMins - mins;
+  } else {
+    if (mins < openMins) minsUntil = openMins - mins;
+    else minsUntil = (24 * 60 - mins) + openMins;
+  }
+  return { open: isOpen, weekend: false, minsUntil };
+}
+
+function toUlat(utcHour: number) { return (utcHour + 8) % 24; }
+function fmtHour(h: number) { return `${String(h).padStart(2, '0')}:00`; }
+function fmtDur(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h === 0 ? `${m}м` : m === 0 ? `${h}ц` : `${h}ц ${m}м`;
+}
+
+function MarketSessions() {
+  const now = useNowTick(30000);
+  const ulatTime = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Ulaanbaatar', hour: '2-digit', minute: '2-digit' });
+  const ulatDate = now.toLocaleDateString('en-GB', { timeZone: 'Asia/Ulaanbaatar', weekday: 'short', day: '2-digit', month: 'short' });
+  const weekend = isForexWeekendClosed(now);
+  return (
+    <div className="relative z-10 bg-ink-900/50 backdrop-blur border-b border-ink-700">
+      <div className="flex items-center gap-2.5 px-3 py-2 overflow-x-auto scrollbar-hide">
+        <div className="shrink-0 flex flex-col">
+          <span className="text-[9px] uppercase tracking-wider text-ink-400 font-bold leading-none">УБ цаг</span>
+          <span className="text-sm font-mono font-bold text-neon-cyan leading-tight">{ulatTime}</span>
+        </div>
+        <div className="h-7 w-px bg-ink-700 shrink-0" />
+        {weekend && (
+          <div className="shrink-0 px-2.5 py-1 rounded-md bg-neon-red/10 border border-neon-red/30 text-[10px] font-bold text-neon-red">
+            🚫 Forex амралттай ({ulatDate})
+          </div>
+        )}
+        {SESSIONS.map(s => {
+          const st = sessionStatus(s, now);
+          const openU = toUlat(s.openUTC);
+          const closeU = toUlat(s.closeUTC);
+          return (
+            <div key={s.name}
+              className={`shrink-0 flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all ${
+                st.open
+                  ? 'bg-neon-green/10 border-neon-green/40 shadow-glow-green'
+                  : 'bg-ink-800/40 border-ink-700'
+              }`}>
+              <span className="text-base leading-none">{s.flag}</span>
+              <div className="flex flex-col leading-none">
+                <span className={`text-[11px] font-bold ${st.open ? 'text-white' : 'text-ink-200'}`}>{s.name}</span>
+                <span className="text-[9px] font-mono text-ink-400 mt-0.5">{fmtHour(openU)}–{fmtHour(closeU)}</span>
+              </div>
+              {st.weekend ? (
+                <span className="text-[10px] text-ink-400">—</span>
+              ) : st.open ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-neon-green/20 text-[9px] font-bold text-neon-green">
+                  <span className="w-1 h-1 rounded-full bg-neon-green animate-glow" />
+                  LIVE · {fmtDur(st.minsUntil)}
+                </span>
+              ) : (
+                <span className="text-[9px] text-ink-400 font-mono">in {fmtDur(st.minsUntil)}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function TradingApp() {
   const [view, setView] = useState('home');
   const [currentLesson, setCurrentLesson] = useState<any>(null);
@@ -398,6 +504,9 @@ export default function TradingApp() {
           </div>
         </div>
       </div>
+
+      {/* Market sessions strip (forex factory style, ULAT time) */}
+      <MarketSessions />
 
       <div className="relative z-10 flex">
         {/* Mobile overlay */}
