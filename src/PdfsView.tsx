@@ -6,6 +6,7 @@ import { useAuth } from './auth/AuthContext';
 import { useOverrides, applyBookOverride } from './admin/overrides';
 
 const PdfReader = lazy(() => import('./PdfReader'));
+const PageFlipReader = lazy(() => import('./PageFlipReader'));
 
 type LangFilter = 'all' | BookLang;
 type DiffFilter = 'all' | BookDifficulty;
@@ -279,7 +280,9 @@ export default function PdfsView({ onOpenAdmin }: { onOpenAdmin?: () => void } =
 
       {readingBook && (
         <Suspense fallback={<div className="fixed inset-0 z-50 bg-ink-950 flex items-center justify-center text-ink-300">PDF reader ачаалж байна...</div>}>
-          <PdfReader book={readingBook} onClose={() => setReadingBook(null)} />
+          {isAdmin
+            ? <PdfReader book={readingBook} onClose={() => setReadingBook(null)} />
+            : <PageFlipReader book={readingBook} onClose={() => setReadingBook(null)} />}
         </Suspense>
       )}
     </div>
