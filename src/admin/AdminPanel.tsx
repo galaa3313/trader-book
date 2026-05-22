@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react';
 import {
   Shield, LogOut, Save, RotateCcw, Download, Upload, Search, ChevronLeft, FileText,
+  Globe, Github, Key, AlertCircle, CheckCircle, ExternalLink, Loader2,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { BOOKS, type BookMeta } from '../data/books';
 import {
-  useOverrides, setBookOverride, resetBookOverride, resetAll, exportJSON, importJSON,
+  useOverrides, setBookOverride, resetBookOverride, resetAllLocal, exportJSON, importJSON,
+  buildMergedJSON, useHasLocalDiff,
 } from './overrides';
+import { getPat, setPat, getRepo, setRepo, publishOverridesViaGitHub } from './githubPublish';
 
 export default function AdminPanel({ onClose }: { onClose: () => void }) {
   const { logout } = useAuth();
   const overrides = useOverrides();
+  const hasLocalDiff = useHasLocalDiff();
   const [search, setSearch] = useState('');
   const [importText, setImportText] = useState('');
   const [importErr, setImportErr] = useState('');
@@ -58,7 +62,9 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-display font-bold text-white text-sm sm:text-base">Админ самбар</div>
-            <div className="text-[10px] text-ink-400">{overrideCount} ном засагдсан · localStorage</div>
+            <div className="text-[10px] text-ink-400">
+              {overrideCount} ном засагдсан{hasLocalDiff && ' · нийтлээгүй өөрчлөлттэй'}
+            </div>
           </div>
           <button
             onClick={() => { if (confirm('Гарах уу?')) { logout(); onClose(); } }}
@@ -69,16 +75,18 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="max-w-5xl mx-auto p-3 sm:p-4 space-y-6">
+        <PublishSection hasLocalDiff={hasLocalDiff} />
+
         <div className="glass rounded-2xl p-4">
-          <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold mb-2">Backup / Restore</div>
+          <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold mb-2">Backup / Restore (локал)</div>
           <div className="flex flex-wrap gap-2 mb-3">
             <button onClick={doExport}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/25">
               <Download size={12} /> JSON татах
             </button>
-            <button onClick={() => { if (confirm('Бүх засварыг устгах уу?')) resetAll(); }}
+            <button onClick={() => { if (confirm('Локал бүх засварыг устгах уу? (Нийтлэгдсэн хувилбар хэвээрээ)')) resetAllLocal(); }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-neon-red/15 border border-neon-red/40 text-neon-red hover:bg-neon-red/25">
-              <RotateCcw size={12} /> Бүгдийг устгах
+              <RotateCcw size={12} /> Локал бүгдийг устгах
             </button>
           </div>
           <details className="text-xs">
@@ -120,16 +128,193 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="p-4 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400 space-y-1">
-          <div className="font-bold text-ink-200 mb-1">💡 Тайлбар</div>
-          <div>• Өөрчлөлт <strong>localStorage</strong>-д хадгалагдана — энэ browser дээр л харагдана.</div>
-          <div>• Бусдад харагдуулмаар бол JSON татаад src/data/books.ts руу хадгалаад redeploy хийх хэрэгтэй.</div>
-          <div>• Хоосон утга оруулах = override арилгах (эх хувилбар руу буцна).</div>
-          <div>• Гар утсаар нэвтэрсэн бол өөр browser дээр дахин нэвтрэх шаардлагатай.</div>
+          <div className="font-bold text-ink-200 mb-1">💡 Хэрхэн ажилладаг вэ?</div>
+          <div>1. Энд номын нэр/тайлбарыг засна — <strong>локал</strong> хадгалагдана (зөвхөн чиний browser).</div>
+          <div>2. <strong>"Нийтлэх"</strong> товчоор GitHub-руу commit хийнэ — Vercel автомат deploy хийнэ.</div>
+          <div>3. ~30 секундын дараа бүх visitor шинэ хувилбарыг харна (cache no-store).</div>
+          <div>4. GitHub token нь ЗӨВХӨН чиний browser-д хадгалагдана — серверт явахгүй.</div>
         </div>
       </div>
     </div>
   );
 }
+
+// =========================================================================
+// PUBLISH SECTION
+// =========================================================================
+
+function PublishSection({ hasLocalDiff }: { hasLocalDiff: boolean }) {
+  const [pat, setPatLocal] = useState(getPat());
+  const [repo, setRepoLocal] = useState(getRepo());
+  const [showSetup, setShowSetup] = useState(!getPat());
+  const [showToken, setShowToken] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [result, setResult] = useState<null | { ok: true; commitUrl: string } | { ok: false; error: string }>(null);
+
+  const saveSetup = () => {
+    setPat(pat.trim());
+    setRepo(repo.trim() || 'galaa3313/trader-book');
+    setShowSetup(false);
+  };
+
+  const doPublish = async () => {
+    setPublishing(true);
+    setResult(null);
+    try {
+      const json = buildMergedJSON();
+      const r = await publishOverridesViaGitHub(json);
+      setResult(r);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const hasPat = !!getPat();
+  const masked = pat ? `${pat.slice(0, 4)}…${pat.slice(-4)}` : '';
+
+  return (
+    <div className={`rounded-2xl p-4 border ${hasLocalDiff ? 'bg-neon-amber/10 border-neon-amber/40' : 'glass border-neon-green/30'}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <Globe size={16} className={hasLocalDiff ? 'text-neon-amber' : 'text-neon-green'} />
+        <div className="flex-1">
+          <div className="font-display font-bold text-white text-sm">Бодит сайт руу нийтлэх</div>
+          <div className="text-[10px] text-ink-400">
+            {hasLocalDiff ? '⚠ Хадгалагдаагүй өөрчлөлт байна' : '✓ Локал болон нийтлэгдсэн хувилбар адил'}
+          </div>
+        </div>
+        {hasPat && (
+          <button onClick={() => setShowSetup(s => !s)}
+            className="text-[10px] text-ink-400 hover:text-neon-cyan inline-flex items-center gap-1">
+            <Key size={10} /> Token: {masked}
+          </button>
+        )}
+      </div>
+
+      {showSetup ? (
+        <SetupForm
+          pat={pat} setPat={setPatLocal}
+          repo={repo} setRepo={setRepoLocal}
+          showToken={showToken} setShowToken={setShowToken}
+          onSave={saveSetup}
+          hasExisting={hasPat}
+        />
+      ) : (
+        <div className="space-y-2">
+          <button
+            onClick={doPublish}
+            disabled={publishing || !hasLocalDiff}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold bg-gradient-to-r from-neon-green to-neon-cyan text-ink-950 disabled:opacity-40 disabled:cursor-not-allowed shadow-glow-green hover:opacity-90">
+            {publishing ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+            {publishing ? 'GitHub-руу commit хийж байна...' : hasLocalDiff ? 'Нийтлэх (Publish to live site)' : 'Шинэ өөрчлөлт алга'}
+          </button>
+
+          {result?.ok && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-neon-green/10 border border-neon-green/40 text-neon-green text-xs">
+              <CheckCircle size={14} className="mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="font-bold">✓ Амжилттай commit хийгдсэн!</div>
+                <div className="text-ink-300 mt-0.5">Vercel ~30 секундын дараа deploy дуусна.</div>
+                <a href={result.commitUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-1 text-neon-cyan hover:underline">
+                  Commit харах <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          )}
+          {result !== null && result.ok === false && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-neon-red/10 border border-neon-red/40 text-neon-red text-xs">
+              <AlertCircle size={14} className="mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="font-bold">Алдаа гарлаа</div>
+                <div className="text-ink-300 break-all mt-0.5">{result.error}</div>
+                <button onClick={() => setShowSetup(true)}
+                  className="mt-1 text-neon-cyan hover:underline">Token шинэчлэх</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SetupForm({
+  pat, setPat, repo, setRepo, showToken, setShowToken, onSave, hasExisting,
+}: {
+  pat: string; setPat: (v: string) => void;
+  repo: string; setRepo: (v: string) => void;
+  showToken: boolean; setShowToken: (v: boolean) => void;
+  onSave: () => void;
+  hasExisting: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="p-3 rounded-lg bg-ink-900/60 border border-ink-700 text-xs text-ink-300 space-y-2">
+        <div className="font-bold text-white flex items-center gap-1.5">
+          <Github size={14} /> Анх удаа: GitHub token үүсгэх
+        </div>
+        <ol className="list-decimal pl-5 space-y-1 leading-relaxed">
+          <li>
+            <a href="https://github.com/settings/tokens/new?scopes=repo&description=trader-book-admin"
+              target="_blank" rel="noopener noreferrer"
+              className="text-neon-cyan hover:underline inline-flex items-center gap-1">
+              GitHub Token үүсгэх хуудас нээх <ExternalLink size={10} />
+            </a>
+          </li>
+          <li><strong>Note:</strong> "trader-book admin" гэх мэт; <strong>Expiration:</strong> "No expiration" эсвэл удаан хугацаа</li>
+          <li><strong>Scopes:</strong> зөвхөн <code className="bg-ink-800 px-1 rounded">repo</code> чеклүүлнэ (бүх repo-нд write эрх)</li>
+          <li>"Generate token" дарна → гарсан <code>ghp_...</code> token-ыг хуулна</li>
+          <li>Доорх талбарт paste хийгээд <strong>Хадгалах</strong></li>
+        </ol>
+        <div className="text-[10px] text-ink-500 italic">
+          Token нь ЗӨВХӨН энэ browser-ийн localStorage-д хадгалагдана. Сервер рүү явахгүй.
+        </div>
+      </div>
+
+      <label className="block">
+        <span className="text-[10px] uppercase tracking-wider text-ink-400 font-bold">GitHub Token (PAT)</span>
+        <div className="flex gap-2 mt-1">
+          <input
+            type={showToken ? 'text' : 'password'}
+            value={pat} onChange={e => setPat(e.target.value)}
+            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            className="flex-1 px-3 py-2 bg-ink-900/60 border border-ink-700 rounded-lg text-white outline-none focus:border-neon-cyan font-mono text-xs" />
+          <button onClick={() => setShowToken(!showToken)} type="button"
+            className="px-3 rounded-lg text-xs font-bold bg-ink-800 border border-ink-700 text-ink-300 hover:text-white">
+            {showToken ? 'Нуух' : 'Харах'}
+          </button>
+        </div>
+      </label>
+
+      <label className="block">
+        <span className="text-[10px] uppercase tracking-wider text-ink-400 font-bold">Repo (owner/name)</span>
+        <input
+          value={repo} onChange={e => setRepo(e.target.value)}
+          placeholder="galaa3313/trader-book"
+          className="w-full mt-1 px-3 py-2 bg-ink-900/60 border border-ink-700 rounded-lg text-white outline-none focus:border-neon-cyan font-mono text-xs" />
+      </label>
+
+      <div className="flex gap-2">
+        <button onClick={onSave} disabled={!pat.trim()}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-neon-cyan to-neon-violet text-ink-950 disabled:opacity-40">
+          <Save size={12} /> Хадгалах
+        </button>
+        {hasExisting && (
+          <>
+            <button onClick={() => { setPat(''); }} type="button"
+              className="px-3 py-2 rounded-lg text-xs font-bold bg-neon-red/15 border border-neon-red/40 text-neon-red hover:bg-neon-red/25">
+              Token арилгах
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// BOOK EDITOR
+// =========================================================================
 
 type BookOv = NonNullable<NonNullable<ReturnType<typeof useOverrides>['books']>[string]>;
 
@@ -197,7 +382,7 @@ function BookEditor({ original, ov }: { original: BookMeta; ov: BookOv }) {
       <div className="flex items-center gap-2 mt-3">
         <button onClick={apply} disabled={!dirty}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-neon-cyan/15 border border-neon-cyan/40 text-neon-cyan disabled:opacity-40 hover:bg-neon-cyan/25">
-          <Save size={12} /> Хадгалах
+          <Save size={12} /> Хадгалах (локал)
         </button>
         <button onClick={reset} disabled={!isEdited}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-ink-800 border border-ink-700 text-ink-300 hover:border-neon-red/40 hover:text-neon-red disabled:opacity-40">
