@@ -118,6 +118,257 @@ function fmtDur(mins: number) {
   return h === 0 ? `${m}м` : m === 0 ? `${h}ц` : `${h}ц ${m}м`;
 }
 
+// ============ ALL FX PAIRS ============
+type Pair = { sym: string; base: string; quote: string; group: 'major' | 'minor' | 'exotic' };
+
+const FLAGS: Record<string, string> = {
+  USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵', CHF: '🇨🇭', CAD: '🇨🇦',
+  AUD: '🇦🇺', NZD: '🇳🇿', CNY: '🇨🇳', MXN: '🇲🇽', ZAR: '🇿🇦', SEK: '🇸🇪',
+  NOK: '🇳🇴', DKK: '🇩🇰', SGD: '🇸🇬', HKD: '🇭🇰', TRY: '🇹🇷', PLN: '🇵🇱',
+  KRW: '🇰🇷', INR: '🇮🇳', BRL: '🇧🇷', HUF: '🇭🇺', CZK: '🇨🇿', ILS: '🇮🇱',
+};
+
+const PAIRS: Pair[] = [
+  // Majors (7)
+  { sym: 'EUR/USD', base: 'EUR', quote: 'USD', group: 'major' },
+  { sym: 'GBP/USD', base: 'GBP', quote: 'USD', group: 'major' },
+  { sym: 'USD/JPY', base: 'USD', quote: 'JPY', group: 'major' },
+  { sym: 'USD/CHF', base: 'USD', quote: 'CHF', group: 'major' },
+  { sym: 'USD/CAD', base: 'USD', quote: 'CAD', group: 'major' },
+  { sym: 'AUD/USD', base: 'AUD', quote: 'USD', group: 'major' },
+  { sym: 'NZD/USD', base: 'NZD', quote: 'USD', group: 'major' },
+  // Minors / Crosses (16)
+  { sym: 'EUR/GBP', base: 'EUR', quote: 'GBP', group: 'minor' },
+  { sym: 'EUR/JPY', base: 'EUR', quote: 'JPY', group: 'minor' },
+  { sym: 'EUR/CHF', base: 'EUR', quote: 'CHF', group: 'minor' },
+  { sym: 'EUR/AUD', base: 'EUR', quote: 'AUD', group: 'minor' },
+  { sym: 'EUR/CAD', base: 'EUR', quote: 'CAD', group: 'minor' },
+  { sym: 'EUR/NZD', base: 'EUR', quote: 'NZD', group: 'minor' },
+  { sym: 'GBP/JPY', base: 'GBP', quote: 'JPY', group: 'minor' },
+  { sym: 'GBP/CHF', base: 'GBP', quote: 'CHF', group: 'minor' },
+  { sym: 'GBP/AUD', base: 'GBP', quote: 'AUD', group: 'minor' },
+  { sym: 'GBP/CAD', base: 'GBP', quote: 'CAD', group: 'minor' },
+  { sym: 'AUD/JPY', base: 'AUD', quote: 'JPY', group: 'minor' },
+  { sym: 'AUD/CHF', base: 'AUD', quote: 'CHF', group: 'minor' },
+  { sym: 'AUD/NZD', base: 'AUD', quote: 'NZD', group: 'minor' },
+  { sym: 'NZD/JPY', base: 'NZD', quote: 'JPY', group: 'minor' },
+  { sym: 'CAD/JPY', base: 'CAD', quote: 'JPY', group: 'minor' },
+  { sym: 'CHF/JPY', base: 'CHF', quote: 'JPY', group: 'minor' },
+  // Exotics (9)
+  { sym: 'USD/CNY', base: 'USD', quote: 'CNY', group: 'exotic' },
+  { sym: 'USD/MXN', base: 'USD', quote: 'MXN', group: 'exotic' },
+  { sym: 'USD/ZAR', base: 'USD', quote: 'ZAR', group: 'exotic' },
+  { sym: 'USD/SEK', base: 'USD', quote: 'SEK', group: 'exotic' },
+  { sym: 'USD/NOK', base: 'USD', quote: 'NOK', group: 'exotic' },
+  { sym: 'USD/SGD', base: 'USD', quote: 'SGD', group: 'exotic' },
+  { sym: 'USD/HKD', base: 'USD', quote: 'HKD', group: 'exotic' },
+  { sym: 'USD/TRY', base: 'USD', quote: 'TRY', group: 'exotic' },
+  { sym: 'USD/PLN', base: 'USD', quote: 'PLN', group: 'exotic' },
+];
+
+function useAllRates() {
+  const [data, setData] = useState<{ now: Record<string, number>; prev: Record<string, number> } | null>(null);
+  const [live, setLive] = useState(false);
+  const [updated, setUpdated] = useState<Date | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+    const load = async () => {
+      try {
+        const [nowR, prevR] = await Promise.all([
+          fetch('https://api.frankfurter.app/latest?from=USD'),
+          fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`),
+        ]);
+        const nowJ = await nowR.json();
+        const prevJ = await prevR.json();
+        if (cancelled) return;
+        setData({
+          now: { USD: 1, ...nowJ.rates },
+          prev: { USD: 1, ...prevJ.rates },
+        });
+        setLive(true);
+        setUpdated(new Date());
+      } catch (e) {}
+    };
+    load();
+    const id = setInterval(load, 120000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+  return { data, live, updated };
+}
+
+function pipSize(quote: string) { return quote === 'JPY' ? 0.01 : 0.0001; }
+
+function computePair(p: Pair, rates: { now: any; prev: any }, lot: number) {
+  const now = rates.now;
+  const prev = rates.prev;
+  if (!now[p.base] || !now[p.quote] || !prev[p.base] || !prev[p.quote]) return null;
+  const price = now[p.quote] / now[p.base];
+  const prevPrice = prev[p.quote] / prev[p.base];
+  const ps = pipSize(p.quote);
+  const pipsDelta = (price - prevPrice) / ps;
+  // pip value in USD per lot
+  const pipUSD = (lot * 100000 * ps) / (p.quote === 'USD' ? 1 : now[p.quote]);
+  const dollarChange = pipsDelta * pipUSD;
+  const priceDigits = p.quote === 'JPY' ? 3 : 5;
+  return { ...p, price, prevPrice, pipsDelta, pipUSD, dollarChange, priceDigits };
+}
+
+function PairsView() {
+  const { data, live, updated } = useAllRates();
+  const [lot, setLot] = useState(0.1);
+  const [filter, setFilter] = useState<'all' | 'major' | 'minor' | 'exotic'>('all');
+  const [search, setSearch] = useState('');
+
+  const rows = useMemo(() => {
+    if (!data) return [];
+    return PAIRS
+      .filter(p => filter === 'all' || p.group === filter)
+      .filter(p => p.sym.toLowerCase().includes(search.toLowerCase()))
+      .map(p => computePair(p, data, lot))
+      .filter(Boolean) as any[];
+  }, [data, lot, filter, search]);
+
+  const lotPresets = [0.01, 0.1, 0.5, 1, 5, 10];
+  const filters: any[] = [
+    { id: 'all', label: 'Бүгд', count: PAIRS.length },
+    { id: 'major', label: 'Major', count: PAIRS.filter(p => p.group === 'major').length },
+    { id: 'minor', label: 'Minor', count: PAIRS.filter(p => p.group === 'minor').length },
+    { id: 'exotic', label: 'Exotic', count: PAIRS.filter(p => p.group === 'exotic').length },
+  ];
+
+  return (
+    <div className="animate-fade-in">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-neon-green/15 text-neon-green flex items-center justify-center">
+            <Activity size={22} />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white">Live хослолууд</h1>
+            <p className="text-xs text-ink-400">{PAIRS.length} pair · ECB бодит ханш · pip-ийн live үнэ</p>
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold ${live ? 'bg-neon-green/15 text-neon-green' : 'bg-ink-700 text-ink-300'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-neon-green animate-glow' : 'bg-ink-400'}`} />
+            {live ? 'LIVE' : 'Татаж...'}
+          </span>
+          {updated && <span className="text-[10px] text-ink-400 font-mono">{updated.toLocaleTimeString('en-GB', { timeZone: 'Asia/Ulaanbaatar', hour: '2-digit', minute: '2-digit' })}</span>}
+        </div>
+      </div>
+
+      {/* Lot size control */}
+      <div className="glass rounded-2xl p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold">Lot хэмжээ</div>
+            <div className="text-3xl font-display font-bold text-neon-cyan font-mono leading-tight">{lot}</div>
+            <div className="text-[10px] text-ink-400">= {(lot * 100000).toLocaleString()} нэгж</div>
+          </div>
+          <input
+            type="number" step="0.01" min="0.01"
+            value={lot}
+            onChange={e => setLot(Math.max(0.01, +e.target.value || 0.01))}
+            className="w-28 px-3 py-2 bg-ink-900/60 border border-ink-700 rounded-lg text-white font-mono text-right focus:border-neon-cyan outline-none"
+          />
+        </div>
+        <input
+          type="range" min="0.01" max="10" step="0.01"
+          value={lot}
+          onChange={e => setLot(+e.target.value)}
+          className="w-full accent-neon-cyan"
+        />
+        <div className="flex gap-1.5 mt-2 flex-wrap">
+          {lotPresets.map(p => (
+            <button key={p} onClick={() => setLot(p)}
+              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${lot === p ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50' : 'bg-ink-800 text-ink-300 border border-ink-700 hover:border-ink-500'}`}>
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter + search */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {filters.map(f => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f.id ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40' : 'glass text-ink-300 hover:text-white'}`}>
+            {f.label} <span className="opacity-60 ml-1">{f.count}</span>
+          </button>
+        ))}
+        <div className="relative flex-1 min-w-[150px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" size={14} />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="EUR, JPY..."
+            className="w-full pl-9 pr-3 py-1.5 glass rounded-lg text-white text-sm outline-none focus:border-neon-cyan" />
+        </div>
+      </div>
+
+      {/* Table header (desktop) */}
+      <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-[10px] uppercase tracking-wider text-ink-400 font-bold">
+        <div className="col-span-3">Хослол</div>
+        <div className="col-span-2 text-right">Ханш</div>
+        <div className="col-span-2 text-right">Pip / lot</div>
+        <div className="col-span-2 text-right">Pips (24ц)</div>
+        <div className="col-span-3 text-right">USD өөрчлөлт</div>
+      </div>
+
+      {/* Rows */}
+      {!data ? (
+        <div className="text-center py-12 text-ink-400">⏳ Зах зээлийн ханш татаж байна...</div>
+      ) : rows.length === 0 ? (
+        <div className="text-center py-12 text-ink-400">Олдсонгүй</div>
+      ) : (
+        <div className="space-y-1.5">
+          {rows.map((r: any) => {
+            const up = r.dollarChange >= 0;
+            return (
+              <div key={r.sym} className={`glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
+                <div className="col-span-12 md:col-span-3 flex items-center gap-2">
+                  <span className="text-lg leading-none">{FLAGS[r.base]}{FLAGS[r.quote]}</span>
+                  <div>
+                    <div className="font-mono font-bold text-white text-sm">{r.sym}</div>
+                    <div className="text-[9px] uppercase tracking-wider text-ink-400">{r.group}</div>
+                  </div>
+                </div>
+                <div className="col-span-4 md:col-span-2 md:text-right">
+                  <div className="md:hidden text-[9px] uppercase text-ink-400">Ханш</div>
+                  <div className="font-mono text-sm text-ink-100">{r.price.toFixed(r.priceDigits)}</div>
+                </div>
+                <div className="col-span-4 md:col-span-2 md:text-right">
+                  <div className="md:hidden text-[9px] uppercase text-ink-400">$/pip</div>
+                  <div className="font-mono text-sm text-neon-cyan">${r.pipUSD.toFixed(2)}</div>
+                </div>
+                <div className="col-span-4 md:col-span-2 md:text-right">
+                  <div className="md:hidden text-[9px] uppercase text-ink-400">Pips</div>
+                  <div className={`font-mono text-sm font-bold ${up ? 'text-neon-green' : 'text-neon-red'}`}>
+                    {up ? '+' : ''}{r.pipsDelta.toFixed(1)}
+                  </div>
+                </div>
+                <div className="col-span-12 md:col-span-3 md:text-right">
+                  <div className="md:hidden text-[9px] uppercase text-ink-400">USD ({lot} lot)</div>
+                  <div className={`font-mono text-base font-bold ${up ? 'text-neon-green' : 'text-neon-red'}`}>
+                    {up ? '▲' : '▼'} {up ? '+' : '-'}${Math.abs(r.dollarChange).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-6 p-4 rounded-xl bg-ink-900/40 border border-ink-700 text-xs text-ink-400">
+        <div className="font-bold text-ink-200 mb-1">💡 Тайлбар</div>
+        <div>• <span className="text-neon-cyan">$/pip</span> — Сонгосон lot-д таны 1 pip-ийн үнэ</div>
+        <div>• <span className="text-neon-green">Pips (24ц)</span> — Сүүлийн business day-аас одоо хүртэлх pip-ийн зөрүү</div>
+        <div>• <span className="text-neon-amber">USD өөрчлөлт</span> — Хэрэв та 24 цагийн өмнө нээсэн бол одоо хэдэн доллар үлдэх вэ</div>
+        <div className="mt-1">• Ханшийн эх сурвалж: Frankfurter / ECB (албан ёсны). 2 минут тутамд шинэчилнэ.</div>
+      </div>
+    </div>
+  );
+}
+
 function MarketSessions() {
   const now = useNowTick(30000);
   const ulatTime = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Ulaanbaatar', hour: '2-digit', minute: '2-digit' });
@@ -250,10 +501,11 @@ export default function TradingApp() {
   // ============ NAV ============
   const navItems = [
     { icon: Home, label: 'Нүүр', target: 'home' },
+    { icon: Activity, label: 'Live хослол', target: 'pairs' },
     { icon: BookOpen, label: 'Хичээл', target: 'lessons' },
     { icon: Library, label: 'Ном', target: 'library' },
     { icon: Zap, label: 'Cheat', target: 'cheat' },
-    { icon: Calculator, label: 'Тоо', target: 'calc' },
+    { icon: Calculator, label: 'Тооцоо', target: 'calc' },
     { icon: FileText, label: 'Толь', target: 'glossary' },
     { icon: Award, label: 'Явц', target: 'progress' },
   ];
@@ -574,6 +826,8 @@ export default function TradingApp() {
             {view === 'home' && <HomeView setView={setView} lessons={lessons} books={books} glossary={glossary}
               completedCount={completedCount} overallProgress={overallProgress} cheatsheet={cheatsheet}
               progress={progress} startLesson={startLesson} isLessonUnlocked={isLessonUnlocked} />}
+
+            {view === 'pairs' && <PairsView />}
 
             {view === 'lessons' && (
               <div className="animate-fade-in">
@@ -949,8 +1203,8 @@ export default function TradingApp() {
         <div className="grid grid-cols-5 px-1 pt-1.5">
           {[
             { icon: Home, label: 'Нүүр', target: 'home' },
+            { icon: Activity, label: 'Live', target: 'pairs' },
             { icon: BookOpen, label: 'Хичээл', target: 'lessons' },
-            { icon: Zap, label: 'Cheat', target: 'cheat' },
             { icon: Calculator, label: 'Тоо', target: 'calc' },
             { icon: Award, label: 'Явц', target: 'progress' },
           ].map(n => (
@@ -1023,6 +1277,10 @@ function HomeView({ setView, lessons, books, glossary, completedCount, overallPr
                 Сурч эхлэх →
               </button>
             )}
+            <button onClick={() => setView('pairs')}
+              className="px-5 py-3 bg-neon-green/15 border border-neon-green/40 text-neon-green hover:bg-neon-green/25 rounded-xl font-bold text-sm flex items-center gap-2">
+              📊 Live хослол
+            </button>
             <button onClick={() => setView('library')}
               className="px-5 py-3 glass hover:bg-white/10 rounded-xl font-bold text-sm flex items-center gap-2">
               📚 Номын сан
