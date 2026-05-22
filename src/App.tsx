@@ -205,37 +205,71 @@ const ASSETS: Asset[] = [
 type FxRates = { now: Record<string, number>; prev: Record<string, number> } | null;
 type ExtPrice = { current: number; prev: number };
 type ExtPrices = Record<string, ExtPrice>;
+type SourceStatus = 'loading' | 'ok' | 'error';
+type SourceState = { status: SourceStatus; error?: string };
 
 function useAllAssets() {
   const [fx, setFx] = useState<FxRates>(null);
   const [ext, setExt] = useState<ExtPrices>({});
-  const [live, setLive] = useState(false);
   const [updated, setUpdated] = useState<Date | null>(null);
+  const [sources, setSources] = useState<Record<string, SourceState>>({
+    forex:  { status: 'loading' },
+    crypto: { status: 'loading' },
+    yahoo:  { status: 'loading' },
+  });
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = () => setReloadKey(k => k + 1);
 
   useEffect(() => {
     let cancelled = false;
     const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+    const setStatus = (k: string, s: SourceState) =>
+      setSources(prev => ({ ...prev, [k]: s }));
 
     const load = () => {
-      // 1. Forex — fire & forget, set state ASAP when ready
+      console.log('[Live] reloading…', new Date().toLocaleTimeString());
+      setSources(prev => ({
+        forex:  prev.forex.status  === 'ok' ? prev.forex  : { status: 'loading' },
+        crypto: prev.crypto.status === 'ok' ? prev.crypto : { status: 'loading' },
+        yahoo:  prev.yahoo.status  === 'ok' ? prev.yahoo  : { status: 'loading' },
+      }));
+
+      // 1. Forex via Frankfurter
       Promise.all([
-        fetch('https://api.frankfurter.app/latest?from=USD').then(r => r.json()),
-        fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`).then(r => r.json()),
+        fetch('https://api.frankfurter.app/latest?from=USD').then(r => {
+          if (!r.ok) throw new Error(`Frankfurter latest HTTP ${r.status}`);
+          return r.json();
+        }),
+        fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`).then(r => {
+          if (!r.ok) throw new Error(`Frankfurter prev HTTP ${r.status}`);
+          return r.json();
+        }),
       ])
         .then(([n, p]) => {
-          if (cancelled || !n?.rates || !p?.rates) return;
+          if (cancelled) return;
+          if (!n?.rates || !p?.rates) throw new Error('Invalid response shape');
+          console.log('[Live] ✓ Frankfurter:', Object.keys(n.rates).length, 'currencies');
           setFx({ now: { USD: 1, ...n.rates }, prev: { USD: 1, ...p.rates } });
-          setLive(true);
           setUpdated(new Date());
+          setStatus('forex', { status: 'ok' });
         })
-        .catch(() => {});
+        .catch(err => {
+          if (cancelled) return;
+          console.error('[Live] ✕ Frankfurter failed:', err);
+          setStatus('forex', { status: 'error', error: String(err.message || err) });
+        });
 
       // 2. Crypto via CoinGecko
       const cryptoIds = ASSETS.filter(a => a.source.kind === 'crypto').map(a => (a.source as any).cgId).join(',');
       fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`)
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error(`CoinGecko HTTP ${r.status}`);
+          return r.json();
+        })
         .then(data => {
-          if (cancelled || !data) return;
+          if (cancelled) return;
+          if (!data || typeof data !== 'object') throw new Error('Invalid response');
+          console.log('[Live] ✓ CoinGecko:', Object.keys(data).length, 'coins');
           setExt(prev => {
             const next = { ...prev };
             ASSETS.forEach(a => {
@@ -248,15 +282,26 @@ function useAllAssets() {
             });
             return next;
           });
+          setStatus('crypto', { status: 'ok' });
         })
-        .catch(() => {});
+        .catch(err => {
+          if (cancelled) return;
+          console.error('[Live] ✕ CoinGecko failed:', err);
+          setStatus('crypto', { status: 'error', error: String(err.message || err) });
+        });
 
       // 3. Yahoo (metals + indices) via /api/quotes proxy
       const yahooSyms = ASSETS.filter(a => a.source.kind === 'yahoo').map(a => (a.source as any).yahooSym).join(',');
       fetch(`/api/quotes?symbols=${encodeURIComponent(yahooSyms)}`)
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error(`/api/quotes HTTP ${r.status} (Vercel function deployed?)`);
+          return r.json();
+        })
         .then(data => {
-          if (cancelled || !Array.isArray(data)) return;
+          if (cancelled) return;
+          if (!Array.isArray(data)) throw new Error('Expected array');
+          const okCount = data.filter((q: any) => q && q.price != null).length;
+          console.log('[Live] ✓ Yahoo proxy:', okCount, '/', data.length, 'OK');
           const map: Record<string, any> = {};
           data.forEach((q: any) => { if (q && q.sym) map[q.sym] = q; });
           setExt(prev => {
@@ -269,16 +314,23 @@ function useAllAssets() {
             });
             return next;
           });
+          setStatus('yahoo', okCount === 0
+            ? { status: 'error', error: 'Бүх Yahoo symbol амжилтгүй' }
+            : { status: 'ok' });
         })
-        .catch(() => {});
+        .catch(err => {
+          if (cancelled) return;
+          console.error('[Live] ✕ /api/quotes failed:', err);
+          setStatus('yahoo', { status: 'error', error: String(err.message || err) });
+        });
     };
 
     load();
-    const id = setInterval(load, 120000);
+    const id = setInterval(load, 120000); // 2 минут
     return () => { cancelled = true; clearInterval(id); };
-  }, []);
+  }, [reloadKey]);
 
-  return { fx, ext, live, updated };
+  return { fx, ext, updated, sources, reload };
 }
 
 function computeAsset(a: Asset, fx: FxRates, ext: ExtPrices, lot: number) {
@@ -399,7 +451,7 @@ function TradingViewChartModal({ asset, onClose }: { asset: Asset; onClose: () =
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-ink-700">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{assetIcon(asset)}</span>
+            {assetIcon(asset) && <span className="text-2xl">{assetIcon(asset)}</span>}
             <div>
               <div className="font-display font-bold text-white text-lg">{asset.sym}</div>
               <div className="text-[10px] uppercase tracking-wider text-ink-400">{asset.label || asset.group} · TradingView Chart</div>
@@ -428,10 +480,10 @@ function TradingViewChartModal({ asset, onClose }: { asset: Asset; onClose: () =
   );
 }
 
-function assetIcon(a: Asset) {
-  if (a.source.kind === 'forex') {
-    return `${FLAGS[a.source.base] || '🏳️'}${FLAGS[a.source.quote] || '🏳️'}`;
-  }
+// Returns icon string for asset. For forex returns '' (no icon — pair name speaks for itself,
+// and Windows does not render country-flag emoji pairs correctly).
+function assetIcon(a: Asset): string {
+  if (a.source.kind === 'forex') return '';
   return a.icon || '◆';
 }
 
@@ -445,7 +497,10 @@ const CATEGORIES: { id: AssetGroup; label: string; emoji: string; color: string 
 ];
 
 function PairsView() {
-  const { fx, ext, live, updated } = useAllAssets();
+  const { fx, ext, updated, sources, reload } = useAllAssets();
+  const live = sources.forex.status === 'ok' || sources.crypto.status === 'ok' || sources.yahoo.status === 'ok';
+  const anyLoading = sources.forex.status === 'loading' || sources.crypto.status === 'loading' || sources.yahoo.status === 'loading';
+  const allError = sources.forex.status === 'error' && sources.crypto.status === 'error' && sources.yahoo.status === 'error';
   const [lot, setLot] = useState(0.1);
   const [category, setCategory] = useState<AssetGroup>('major');
   const [selectedSyms, setSelectedSyms] = useState<Set<string>>(
@@ -512,13 +567,53 @@ function PairsView() {
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold ${live ? 'bg-neon-green/15 text-neon-green' : 'bg-ink-700 text-ink-300'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-neon-green animate-glow' : 'bg-ink-400'}`} />
-            {live ? 'LIVE' : 'Татаж...'}
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold ${live ? 'bg-neon-green/15 text-neon-green' : anyLoading ? 'bg-neon-amber/15 text-neon-amber' : 'bg-neon-red/15 text-neon-red'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-neon-green animate-glow' : anyLoading ? 'bg-neon-amber animate-pulse' : 'bg-neon-red'}`} />
+            {live ? 'LIVE' : anyLoading ? 'Татаж...' : 'Алдаа'}
           </span>
           {updated && <span className="text-[10px] text-ink-400 font-mono">{updated.toLocaleTimeString('en-GB', { timeZone: 'Asia/Ulaanbaatar', hour: '2-digit', minute: '2-digit' })}</span>}
+          <button onClick={reload} title="Дахин татах"
+            className="px-2 py-1 rounded-md text-[10px] font-bold bg-ink-800 border border-ink-700 hover:border-neon-cyan/40 text-ink-300 hover:text-neon-cyan transition-all">
+            ↻ Шинэчлэх
+          </button>
         </div>
       </div>
+
+      {/* Per-source status row */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { id: 'forex',  label: 'Forex',          src: 'Frankfurter / ECB' },
+          { id: 'crypto', label: 'Crypto',         src: 'CoinGecko' },
+          { id: 'yahoo',  label: 'Metals/Indices', src: 'Yahoo (via /api/quotes)' },
+        ].map(s => {
+          const st = sources[s.id];
+          const color =
+            st.status === 'ok'    ? 'border-neon-green/40 bg-neon-green/10  text-neon-green'  :
+            st.status === 'error' ? 'border-neon-red/40 bg-neon-red/10 text-neon-red'         :
+                                    'border-neon-amber/40 bg-neon-amber/10 text-neon-amber';
+          const icon = st.status === 'ok' ? '✓' : st.status === 'error' ? '✕' : '⏳';
+          return (
+            <div key={s.id} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] ${color}`} title={st.error || ''}>
+              <span className="font-bold">{icon}</span>
+              <span className="font-bold">{s.label}</span>
+              <span className="opacity-60 hidden sm:inline">· {s.src}</span>
+              {st.status === 'error' && st.error && (
+                <span className="opacity-80 truncate max-w-[200px]">— {st.error}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {allError && (
+        <div className="mb-4 p-4 rounded-xl border border-neon-red/40 bg-neon-red/10 text-sm text-ink-100">
+          <div className="font-bold text-neon-red mb-1">⚠ Бүх ханшийн эх сурвалж амжилтгүй болсон</div>
+          <div className="text-xs text-ink-300">
+            Сүлжээгээ шалгаад <button onClick={reload} className="underline text-neon-cyan font-bold">↻ Дахин татах</button> товчийг дарна уу.
+            Browser console-д (F12 → Console) дэлгэрэнгүй алдааг харж болно.
+          </div>
+        </div>
+      )}
 
       {/* Lot size control */}
       <div className="glass rounded-2xl p-4 mb-4">
@@ -614,6 +709,7 @@ function PairsView() {
             <div className="text-xs text-ink-400 py-2">Олдсонгүй</div>
           ) : filteredCategoryPairs.map(a => {
             const selected = selectedSyms.has(a.sym);
+            const ic = assetIcon(a);
             return (
               <button key={a.sym} onClick={() => toggleSym(a.sym)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 ${
@@ -621,7 +717,7 @@ function PairsView() {
                     ? 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/50 shadow-glow-cyan'
                     : 'bg-ink-800/60 text-ink-400 border-ink-700 hover:text-white hover:border-ink-500'
                 }`}>
-                <span className="text-sm leading-none">{assetIcon(a)}</span>
+                {ic && <span className="text-sm leading-none">{ic}</span>}
                 <span>{a.sym}</span>
                 {selected && <span className="text-[10px] text-neon-green">●</span>}
               </button>
@@ -653,7 +749,7 @@ function PairsView() {
             return (
               <div key={r.sym} className={`group glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
-                  <span className="text-lg leading-none">{assetIcon(r)}</span>
+                  {assetIcon(r) && <span className="text-lg leading-none">{assetIcon(r)}</span>}
                   <div className="flex-1 min-w-0">
                     <div className="font-mono font-bold text-white text-sm">{r.sym}</div>
                     <div className="text-[9px] uppercase tracking-wider text-ink-400 truncate">{r.label || r.group}</div>
