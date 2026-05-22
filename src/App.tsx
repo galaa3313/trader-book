@@ -231,11 +231,24 @@ function PairsView() {
 
   const lotPresets = [0.01, 0.1, 0.5, 1, 5, 10];
   const filters: any[] = [
-    { id: 'all', label: 'Бүгд', count: PAIRS.length },
-    { id: 'major', label: 'Major', count: PAIRS.filter(p => p.group === 'major').length },
-    { id: 'minor', label: 'Minor', count: PAIRS.filter(p => p.group === 'minor').length },
-    { id: 'exotic', label: 'Exotic', count: PAIRS.filter(p => p.group === 'exotic').length },
+    { id: 'all', label: 'Бүх хослол', count: PAIRS.length, color: 'cyan' },
+    { id: 'major', label: 'Major', count: PAIRS.filter(p => p.group === 'major').length, color: 'green' },
+    { id: 'minor', label: 'Minor', count: PAIRS.filter(p => p.group === 'minor').length, color: 'violet' },
+    { id: 'exotic', label: 'Exotic', count: PAIRS.filter(p => p.group === 'exotic').length, color: 'amber' },
   ];
+  const currentFilter = filters.find(f => f.id === filter)!;
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  useEffect(() => {
+    if (!filterOpen) return;
+    const close = () => setFilterOpen(false);
+    setTimeout(() => document.addEventListener('click', close, { once: true }), 0);
+    return () => document.removeEventListener('click', close);
+  }, [filterOpen]);
+
+  const step = lot < 0.1 ? 0.01 : lot < 1 ? 0.1 : 1;
+  const decLot = () => setLot(Math.max(0.01, +(lot - step).toFixed(2)));
+  const incLot = () => setLot(+(lot + step).toFixed(2));
 
   return (
     <div className="animate-fade-in">
@@ -260,48 +273,93 @@ function PairsView() {
 
       {/* Lot size control */}
       <div className="glass rounded-2xl p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <div className="text-[10px] uppercase tracking-wider text-ink-400 font-bold">Lot хэмжээ</div>
-            <div className="text-3xl font-display font-bold text-neon-cyan font-mono leading-tight">{lot}</div>
-            <div className="text-[10px] text-ink-400">= {(lot * 100000).toLocaleString()} нэгж</div>
+            <div className="text-[10px] text-ink-400 mt-0.5">= {(lot * 100000).toLocaleString()} нэгж · алхам {step}</div>
           </div>
-          <input
-            type="number" step="0.01" min="0.01"
-            value={lot}
-            onChange={e => setLot(Math.max(0.01, +e.target.value || 0.01))}
-            className="w-28 px-3 py-2 bg-ink-900/60 border border-ink-700 rounded-lg text-white font-mono text-right focus:border-neon-cyan outline-none"
-          />
+          {/* +/- with manual input */}
+          <div className="flex items-center gap-2">
+            <button onClick={decLot}
+              className="w-11 h-11 rounded-lg bg-ink-800 border border-ink-700 hover:border-neon-cyan/50 hover:bg-ink-700 text-2xl font-bold text-neon-cyan flex items-center justify-center transition-all">
+              −
+            </button>
+            <input
+              type="number" inputMode="decimal" step="0.01" min="0.01"
+              value={lot}
+              onChange={e => {
+                const v = +e.target.value;
+                if (!isNaN(v) && v > 0) setLot(v);
+                else if (e.target.value === '') setLot(0.01);
+              }}
+              onBlur={e => { if (!+e.target.value || +e.target.value < 0.01) setLot(0.01); }}
+              className="w-28 h-11 px-3 bg-ink-900/60 border border-ink-700 rounded-lg text-white font-mono text-2xl font-bold text-center focus:border-neon-cyan outline-none"
+            />
+            <button onClick={incLot}
+              className="w-11 h-11 rounded-lg bg-ink-800 border border-ink-700 hover:border-neon-cyan/50 hover:bg-ink-700 text-2xl font-bold text-neon-cyan flex items-center justify-center transition-all">
+              +
+            </button>
+          </div>
         </div>
-        <input
-          type="range" min="0.01" max="10" step="0.01"
-          value={lot}
-          onChange={e => setLot(+e.target.value)}
-          className="w-full accent-neon-cyan"
-        />
-        <div className="flex gap-1.5 mt-2 flex-wrap">
+        <div className="flex gap-1.5 mt-3 flex-wrap">
+          <span className="text-[10px] uppercase tracking-wider text-ink-400 self-center mr-1">Хурдан:</span>
           {lotPresets.map(p => (
             <button key={p} onClick={() => setLot(p)}
-              className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${lot === p ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50' : 'bg-ink-800 text-ink-300 border border-ink-700 hover:border-ink-500'}`}>
+              className={`px-3 py-1.5 rounded-md text-xs font-mono font-bold transition-all ${lot === p ? 'bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50' : 'bg-ink-800 text-ink-300 border border-ink-700 hover:border-ink-500'}`}>
               {p}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Filter + search */}
+      {/* Filter dropdown + search */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {filters.map(f => (
-          <button key={f.id} onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f.id ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40' : 'glass text-ink-300 hover:text-white'}`}>
-            {f.label} <span className="opacity-60 ml-1">{f.count}</span>
-          </button>
-        ))}
+        <div className="relative" onClick={e => e.stopPropagation()}>
+          {(() => {
+            const TONE: Record<string, { btn: string; opt: string; bar: string }> = {
+              cyan:   { btn: 'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/40',     opt: 'bg-neon-cyan/15 text-neon-cyan',     bar: 'border-l-neon-cyan' },
+              green:  { btn: 'bg-neon-green/15 text-neon-green border-neon-green/40',  opt: 'bg-neon-green/15 text-neon-green',  bar: 'border-l-neon-green' },
+              violet: { btn: 'bg-neon-violet/15 text-neon-violet border-neon-violet/40', opt: 'bg-neon-violet/15 text-neon-violet', bar: 'border-l-neon-violet' },
+              amber:  { btn: 'bg-neon-amber/15 text-neon-amber border-neon-amber/40',  opt: 'bg-neon-amber/15 text-neon-amber',  bar: 'border-l-neon-amber' },
+            };
+            const t = TONE[currentFilter.color];
+            return (
+              <>
+                <button onClick={() => setFilterOpen(!filterOpen)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all min-w-[200px] ${t.btn}`}>
+                  <span>📂</span>
+                  <span className="flex-1 text-left">{currentFilter.label}</span>
+                  <span className="text-xs opacity-70 font-mono">{currentFilter.count}</span>
+                  <ChevronRight size={16} className={`transition-transform ${filterOpen ? 'rotate-90' : ''}`} />
+                </button>
+                {filterOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 w-full min-w-[220px] glass-strong rounded-xl overflow-hidden z-20 shadow-card animate-fade-in">
+                    {filters.map(f => {
+                      const isActive = filter === f.id;
+                      const ft = TONE[f.color];
+                      return (
+                        <button key={f.id}
+                          onClick={() => { setFilter(f.id); setFilterOpen(false); }}
+                          className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all text-left border-l-2 ${
+                            isActive ? `${ft.opt} ${ft.bar}` : 'text-ink-200 hover:bg-white/5 border-l-transparent'
+                          }`}>
+                          {isActive ? '●' : '○'}
+                          <span className="flex-1">{f.label}</span>
+                          <span className="text-xs opacity-60 font-mono">{f.count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </div>
         <div className="relative flex-1 min-w-[150px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" size={14} />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="EUR, JPY..."
-            className="w-full pl-9 pr-3 py-1.5 glass rounded-lg text-white text-sm outline-none focus:border-neon-cyan" />
+            className="w-full pl-9 pr-3 py-2 glass rounded-lg text-white text-sm outline-none focus:border-neon-cyan" />
         </div>
       </div>
 
