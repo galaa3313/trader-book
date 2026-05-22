@@ -216,55 +216,61 @@ function useAllAssets() {
     let cancelled = false;
     const daysAgo = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
 
-    const load = async () => {
-      // 1. Forex
-      const fxP = Promise.all([
+    const load = () => {
+      // 1. Forex — fire & forget, set state ASAP when ready
+      Promise.all([
         fetch('https://api.frankfurter.app/latest?from=USD').then(r => r.json()),
         fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD`).then(r => r.json()),
-      ]).then(([n, p]) => ({ now: { USD: 1, ...n.rates }, prev: { USD: 1, ...p.rates } }))
-        .catch(() => null);
+      ])
+        .then(([n, p]) => {
+          if (cancelled || !n?.rates || !p?.rates) return;
+          setFx({ now: { USD: 1, ...n.rates }, prev: { USD: 1, ...p.rates } });
+          setLive(true);
+          setUpdated(new Date());
+        })
+        .catch(() => {});
 
       // 2. Crypto via CoinGecko
       const cryptoIds = ASSETS.filter(a => a.source.kind === 'crypto').map(a => (a.source as any).cgId).join(',');
-      const cryptoP = fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`)
-        .then(r => r.json()).catch(() => null);
+      fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`)
+        .then(r => r.json())
+        .then(data => {
+          if (cancelled || !data) return;
+          setExt(prev => {
+            const next = { ...prev };
+            ASSETS.forEach(a => {
+              if (a.source.kind !== 'crypto') return;
+              const d = data[(a.source as any).cgId];
+              if (!d) return;
+              const cur = d.usd;
+              const ch = d.usd_24h_change || 0;
+              next[a.sym] = { current: cur, prev: cur / (1 + ch / 100) };
+            });
+            return next;
+          });
+        })
+        .catch(() => {});
 
-      // 3. Yahoo (metals + indices) via our /api/quotes proxy
+      // 3. Yahoo (metals + indices) via /api/quotes proxy
       const yahooSyms = ASSETS.filter(a => a.source.kind === 'yahoo').map(a => (a.source as any).yahooSym).join(',');
-      const yahooP = fetch(`/api/quotes?symbols=${encodeURIComponent(yahooSyms)}`)
-        .then(r => r.json()).catch(() => null);
-
-      const [fxData, cryptoData, yahooData] = await Promise.all([fxP, cryptoP, yahooP]);
-      if (cancelled) return;
-
-      if (fxData) setFx(fxData);
-
-      const newExt: ExtPrices = {};
-      if (cryptoData) {
-        ASSETS.forEach(a => {
-          if (a.source.kind !== 'crypto') return;
-          const id = a.source.cgId;
-          const d = cryptoData[id];
-          if (!d) return;
-          const cur = d.usd;
-          const ch = d.usd_24h_change || 0;
-          const prev = cur / (1 + ch / 100);
-          newExt[a.sym] = { current: cur, prev };
-        });
-      }
-      if (Array.isArray(yahooData)) {
-        const map: Record<string, any> = {};
-        yahooData.forEach((q: any) => { if (q && q.sym) map[q.sym] = q; });
-        ASSETS.forEach(a => {
-          if (a.source.kind !== 'yahoo') return;
-          const q = map[a.source.yahooSym];
-          if (!q || q.error || q.price == null) return;
-          newExt[a.sym] = { current: q.price, prev: q.prevClose ?? q.price };
-        });
-      }
-      setExt(newExt);
-      setLive(true);
-      setUpdated(new Date());
+      fetch(`/api/quotes?symbols=${encodeURIComponent(yahooSyms)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (cancelled || !Array.isArray(data)) return;
+          const map: Record<string, any> = {};
+          data.forEach((q: any) => { if (q && q.sym) map[q.sym] = q; });
+          setExt(prev => {
+            const next = { ...prev };
+            ASSETS.forEach(a => {
+              if (a.source.kind !== 'yahoo') return;
+              const q = map[(a.source as any).yahooSym];
+              if (!q || q.error || q.price == null) return;
+              next[a.sym] = { current: q.price, prev: q.prevClose ?? q.price };
+            });
+            return next;
+          });
+        })
+        .catch(() => {});
     };
 
     load();
@@ -474,11 +480,13 @@ function PairsView() {
   const rows = useMemo(() => {
     return categoryPairs
       .filter(a => selectedSyms.has(a.sym))
-      .map(a => computeAsset(a, fx, ext, lot))
-      .filter(Boolean) as any[];
+      .map(a => {
+        const c = computeAsset(a, fx, ext, lot);
+        // Always return a row — fill missing fields with null so the
+        // table renders immediately and just shows "—" until data arrives.
+        return c || { ...a, price: null, prevPrice: null, pipsDelta: null, pipUSD: null, dollarChange: null };
+      });
   }, [fx, ext, lot, categoryPairs, selectedSyms]);
-
-  const dataReady = !!fx;
   const lotPresets = [0.01, 0.1, 0.5, 1, 5, 10];
   const TONE: Record<string, string> = {
     cyan:   'bg-neon-cyan/15 text-neon-cyan border-neon-cyan/50',
@@ -631,15 +639,17 @@ function PairsView() {
         <div className="col-span-3 text-right">USD өөрчлөлт</div>
       </div>
 
-      {/* Rows */}
-      {!dataReady ? (
-        <div className="text-center py-12 text-ink-400">⏳ Зах зээлийн ханш татаж байна...</div>
-      ) : rows.length === 0 ? (
-        <div className="text-center py-12 text-ink-400">Олдсонгүй</div>
+      {/* Rows — always render selected pairs; cells show "—" until data arrives */}
+      {rows.length === 0 ? (
+        <div className="text-center py-12 text-ink-400">
+          Хослол сонгоогүй байна — ✓ <span className="text-neon-cyan font-bold">Бүгд</span> товчийг дарна уу
+        </div>
       ) : (
         <div className="space-y-1.5">
           {rows.map((r: any) => {
-            const up = r.dollarChange >= 0;
+            const hasData = r.price != null;
+            const up = hasData && r.dollarChange >= 0;
+            const Mute = ({ children }: any) => <span className="text-ink-500">{children}</span>;
             return (
               <div key={r.sym} className={`group glass rounded-xl px-3 py-3 md:py-2.5 grid grid-cols-12 gap-2 items-center transition-all hover:border-neon-cyan/30`}>
                 <div className="col-span-12 md:col-span-3 flex items-center gap-2">
@@ -658,22 +668,26 @@ function PairsView() {
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">Ханш</div>
-                  <div className="font-mono text-sm text-ink-100">{r.price.toFixed(r.priceDigits)}</div>
+                  <div className="font-mono text-sm text-ink-100">
+                    {hasData ? r.price.toFixed(r.priceDigits) : <Mute>—</Mute>}
+                  </div>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">$/pip</div>
-                  <div className="font-mono text-sm text-neon-cyan">${r.pipUSD.toFixed(2)}</div>
+                  <div className="font-mono text-sm text-neon-cyan">
+                    {hasData ? `$${r.pipUSD.toFixed(2)}` : <Mute>—</Mute>}
+                  </div>
                 </div>
                 <div className="col-span-4 md:col-span-2 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">Pips</div>
-                  <div className={`font-mono text-sm font-bold ${up ? 'text-neon-green' : 'text-neon-red'}`}>
-                    {up ? '+' : ''}{r.pipsDelta.toFixed(1)}
+                  <div className={`font-mono text-sm font-bold ${hasData ? (up ? 'text-neon-green' : 'text-neon-red') : 'text-ink-500'}`}>
+                    {hasData ? `${up ? '+' : ''}${r.pipsDelta.toFixed(1)}` : '—'}
                   </div>
                 </div>
                 <div className="col-span-12 md:col-span-3 md:text-right">
                   <div className="md:hidden text-[9px] uppercase text-ink-400">USD ({lot} lot)</div>
-                  <div className={`font-mono text-base font-bold ${up ? 'text-neon-green' : 'text-neon-red'}`}>
-                    {up ? '▲' : '▼'} {up ? '+' : '-'}${Math.abs(r.dollarChange).toFixed(2)}
+                  <div className={`font-mono text-base font-bold ${hasData ? (up ? 'text-neon-green' : 'text-neon-red') : 'text-ink-500'}`}>
+                    {hasData ? `${up ? '▲' : '▼'} ${up ? '+' : '-'}$${Math.abs(r.dollarChange).toFixed(2)}` : '—'}
                   </div>
                 </div>
               </div>
