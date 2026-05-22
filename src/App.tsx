@@ -8,6 +8,62 @@ import { lessons, books, svgImages, glossary as baseGlossary, cheatsheet } from 
 
 type AnyObj = Record<string, any>;
 
+type TickerItem = { sym: string; price: number; change: number; digits: number };
+
+function useLiveTicker(): { items: TickerItem[]; live: boolean } {
+  const [items, setItems] = useState<TickerItem[]>([]);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const daysAgo = (n: number) => {
+      const d = new Date(); d.setDate(d.getDate() - n);
+      return d.toISOString().slice(0, 10);
+    };
+    const fetchAll = async () => {
+      try {
+        const [cryptoRes, fxNowRes, fxPrevRes] = await Promise.all([
+          fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true'),
+          fetch('https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CNY'),
+          fetch(`https://api.frankfurter.app/${daysAgo(3)}?from=USD&to=EUR,GBP,JPY,CNY`),
+        ]);
+        const [crypto, now, prev] = await Promise.all([cryptoRes.json(), fxNowRes.json(), fxPrevRes.json()]);
+
+        const invChange = (curUSDto: number, prevUSDto: number) => {
+          const curPair = 1 / curUSDto;
+          const prevPair = 1 / prevUSDto;
+          return ((curPair - prevPair) / prevPair) * 100;
+        };
+        const list: TickerItem[] = [
+          { sym: 'EUR/USD', price: 1 / now.rates.EUR, change: invChange(now.rates.EUR, prev.rates.EUR), digits: 4 },
+          { sym: 'GBP/USD', price: 1 / now.rates.GBP, change: invChange(now.rates.GBP, prev.rates.GBP), digits: 4 },
+          { sym: 'USD/JPY', price: now.rates.JPY, change: ((now.rates.JPY - prev.rates.JPY) / prev.rates.JPY) * 100, digits: 2 },
+          { sym: 'USD/CNY', price: now.rates.CNY, change: ((now.rates.CNY - prev.rates.CNY) / prev.rates.CNY) * 100, digits: 4 },
+          { sym: 'BTC/USD', price: crypto.bitcoin.usd, change: crypto.bitcoin.usd_24h_change, digits: 0 },
+          { sym: 'ETH/USD', price: crypto.ethereum.usd, change: crypto.ethereum.usd_24h_change, digits: 0 },
+          { sym: 'SOL/USD', price: crypto.solana.usd, change: crypto.solana.usd_24h_change, digits: 2 },
+        ];
+        if (!cancelled) { setItems(list); setLive(true); }
+      } catch (e) {
+        if (!cancelled && items.length === 0) setItems([
+          { sym: 'EUR/USD', price: 1.0842, change: 0.24, digits: 4 },
+          { sym: 'BTC/USD', price: 67420, change: 2.13, digits: 0 },
+          { sym: 'ETH/USD', price: 3520, change: 1.42, digits: 0 },
+        ]);
+      }
+    };
+    fetchAll();
+    const id = setInterval(fetchAll, 60000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  return { items, live };
+}
+
+function formatPrice(n: number, digits: number) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
 export default function TradingApp() {
   const [view, setView] = useState('home');
   const [currentLesson, setCurrentLesson] = useState<any>(null);
@@ -76,6 +132,8 @@ export default function TradingApp() {
       });
     }
   };
+
+  const { items: tickerItems, live: tickerLive } = useLiveTicker();
 
   const lessonsByLevel = lessons.reduce<AnyObj>((acc, l) => {
     if (!acc[l.level]) acc[l.level] = [];
@@ -307,21 +365,37 @@ export default function TradingApp() {
       <div className="fixed inset-0 bg-aurora pointer-events-none" />
       <div className="fixed inset-0 bg-grid opacity-40 pointer-events-none" />
 
-      {/* Top ticker */}
+      {/* Top ticker — live data from CoinGecko + Frankfurter ECB */}
       <div className="relative z-10 bg-ink-900/80 backdrop-blur border-b border-ink-700 overflow-hidden">
-        <div className="flex animate-ticker whitespace-nowrap py-1.5 text-xs font-mono">
-          {[...Array(2)].map((_, k) => (
-            <div key={k} className="flex gap-8 px-8 shrink-0">
-              <span className="text-neon-green">● EURUSD 1.0842 <span className="text-neon-green/60">+0.24%</span></span>
-              <span className="text-neon-red">● GBPUSD 1.2654 <span className="text-neon-red/60">-0.18%</span></span>
-              <span className="text-neon-amber">● XAUUSD 2,034.50 <span className="text-neon-amber/60">+0.91%</span></span>
-              <span className="text-neon-cyan">● BTCUSD 67,420 <span className="text-neon-cyan/60">+2.13%</span></span>
-              <span className="text-neon-violet">● ETHUSD 3,520 <span className="text-neon-violet/60">+1.42%</span></span>
-              <span className="text-neon-green">● USDJPY 149.82 <span className="text-neon-green/60">+0.08%</span></span>
-              <span className="text-neon-pink">● S&P500 5,124 <span className="text-neon-pink/60">+0.36%</span></span>
-              <span className="text-ink-300">⚠ Боловсролын зорилготой</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 text-xs font-mono">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-bold shrink-0 ${tickerLive ? 'bg-neon-green/15 text-neon-green' : 'bg-ink-700 text-ink-300'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${tickerLive ? 'bg-neon-green animate-glow' : 'bg-ink-400'}`} />
+            {tickerLive ? 'LIVE' : 'Татаж...'}
+          </span>
+          <div className="flex-1 overflow-hidden">
+            <div className="flex animate-ticker whitespace-nowrap">
+              {[...Array(2)].map((_, k) => (
+                <div key={k} className="flex gap-6 px-4 shrink-0">
+                  {tickerItems.length === 0 ? (
+                    <span className="text-ink-400">Зах зээлийн үнэ татаж байна...</span>
+                  ) : tickerItems.map(it => {
+                    const up = it.change >= 0;
+                    return (
+                      <span key={it.sym} className="inline-flex items-center gap-1.5">
+                        <span className={`w-1 h-1 rounded-full ${up ? 'bg-neon-green' : 'bg-neon-red'}`} />
+                        <span className="text-ink-100 font-semibold">{it.sym}</span>
+                        <span className="text-ink-200">{formatPrice(it.price, it.digits)}</span>
+                        <span className={up ? 'text-neon-green' : 'text-neon-red'}>
+                          {up ? '▲' : '▼'} {Math.abs(it.change).toFixed(2)}%
+                        </span>
+                      </span>
+                    );
+                  })}
+                  <span className="text-ink-500">⚠ Боловсролын зорилготой</span>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
